@@ -18,3 +18,10 @@ declare global {
 }
 
 export {};
+
+declare namespace App {
+  interface Locals {
+    user: import('@supabase/supabase-js').User | null;
+    accessEndDate: string | null;
+  }
+}

@@ -1,1 +1,255 @@
 @import 'tailwindcss';
+
+:root {
+  --ink: #111;
+  --paper: #f1f0eb;
+  --line: #b8b7b0;
+  --accent: #d9ff47;
+}
+html {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: Arial, Helvetica, sans-serif;
+}
+body {
+  margin: 0;
+}
+a {
+  color: inherit;
+}
+.marketing-shell,
+.app-shell,
+.content-shell,
+.auth-page {
+  max-width: 1440px;
+  margin: auto;
+  padding: 2rem clamp(1.25rem, 4vw, 5rem);
+}
+.marketing-nav,
+.app-header,
+.dashboard-meta,
+.course-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 1rem;
+}
+.wordmark {
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+}
+.hero {
+  min-height: 80vh;
+  display: grid;
+  grid-template-columns: 1fr minmax(280px, 42%);
+  gap: 4rem;
+  align-content: center;
+}
+.hero h1 {
+  grid-column: 1 / -1;
+  font-size: clamp(3.5rem, 10vw, 9rem);
+  line-height: 0.88;
+  letter-spacing: -0.07em;
+  margin: 1rem 0;
+}
+.hero h1 em {
+  font-style: normal;
+  color: #555;
+}
+.hero img {
+  width: 100%;
+  height: 28rem;
+  object-fit: cover;
+  grid-column: 2;
+}
+.hero-copy {
+  max-width: 28rem;
+  font-size: 1.2rem;
+  line-height: 1.5;
+}
+.eyebrow {
+  font:
+    700 0.75rem/1 Arial,
+    sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.button {
+  display: inline-block;
+  background: var(--ink);
+  color: var(--paper);
+  border: 1px solid var(--ink);
+  padding: 0.8rem 1.1rem;
+  text-decoration: none;
+  cursor: pointer;
+  font: inherit;
+}
+.button:hover,
+.button:focus-visible {
+  background: var(--accent);
+  color: var(--ink);
+}
+.button--text {
+  background: transparent;
+  color: inherit;
+  border: 0;
+  text-decoration: underline;
+  padding: 0;
+}
+.marketing-grid,
+.offer,
+.contact {
+  border-top: 1px solid var(--ink);
+  padding: 5rem 0;
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 2rem;
+}
+.marketing-grid h2,
+.offer h2,
+.contact h2 {
+  font-size: clamp(2rem, 5vw, 5rem);
+  letter-spacing: -0.05em;
+  margin: 0;
+}
+.offer-grid {
+  grid-column: 2;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+.offer-grid article {
+  border-top: 2px solid;
+  padding-top: 1rem;
+}
+.auth-page {
+  max-width: 40rem;
+  padding-top: 12vh;
+}
+.auth-form {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+.auth-form input {
+  border: 1px solid var(--ink);
+  background: transparent;
+  padding: 0.9rem;
+  font: inherit;
+}
+.form-error {
+  background: #ffe1d5;
+  padding: 1rem;
+}
+.app-shell,
+.content-shell {
+  max-width: 1000px;
+}
+.app-header {
+  max-width: 1440px;
+  margin: auto;
+  padding: 1.5rem clamp(1.25rem, 4vw, 5rem);
+}
+.page-heading {
+  padding: 5rem 0 2rem;
+}
+.page-heading h1,
+.content-shell h1 {
+  font-size: clamp(2.8rem, 7vw, 6rem);
+  letter-spacing: -0.06em;
+  line-height: 0.9;
+  margin: 0.5rem 0 1rem;
+}
+.dashboard-meta {
+  padding: 1rem 0 3rem;
+  border-top: 1px solid var(--ink);
+}
+.progress-index details {
+  border-top: 1px solid var(--line);
+  padding: 1rem 0;
+}
+.progress-index summary,
+.progress-index li,
+.content-list a {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+.progress-index summary {
+  cursor: pointer;
+  font-size: 1.25rem;
+}
+.progress-index ul {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0 0 0 1rem;
+}
+.progress-index li {
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.progress-index li ul {
+  flex: 1;
+}
+.badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+  border: 1px solid currentColor;
+  padding: 0.2rem 0.35rem;
+  white-space: nowrap;
+}
+.badge--success {
+  background: var(--accent);
+}
+.content-shell {
+  padding-top: 8vh;
+}
+.rich-text {
+  max-width: 45rem;
+  font-size: 1.2rem;
+  line-height: 1.65;
+  margin: 2rem 0 4rem;
+}
+.content-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--ink);
+}
+.content-list li {
+  border-bottom: 1px solid var(--line);
+  padding: 1rem 0;
+}
+.content-list a {
+  text-decoration: none;
+}
+.course-nav {
+  margin-top: 5rem;
+  border-top: 1px solid var(--ink);
+  padding-top: 1rem;
+}
+@media (max-width: 700px) {
+  .hero,
+  .marketing-grid,
+  .offer,
+  .contact {
+    display: block;
+  }
+  .hero img {
+    grid-column: auto;
+    margin-top: 2rem;
+    height: 18rem;
+  }
+  .offer-grid {
+    margin-top: 2rem;
+    grid-template-columns: 1fr;
+  }
+  .marketing-grid > div {
+    margin-top: 2rem;
+  }
+}

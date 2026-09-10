@@ -1,4 +1,4 @@
-# Boilerplate
+# Pragma Formation
 
 A modern, high-performance website built with [Astro](https://astro.build), [Storyblok](https://storyblok.com) headless CMS, and [Tailwind CSS](https://tailwindcss.com). Deployed on [Vercel](https://vercel.com) with full SEO optimization.
 
@@ -9,7 +9,8 @@ A modern, high-performance website built with [Astro](https://astro.build), [Sto
 
 ## ✨ Features
 
-- **Hybrid Rendering**: Static Site Generation (SSG) for production, Server-Side Rendering (SSR) for preview mode
+- **SSR Vercel**: Server-side rendering for the authenticated platform, with an explicitly pre-rendered marketing homepage
+- **Supabase Auth**: Email OTP with secure persistent cookies and RLS-protected progress
 - **Storyblok Integration**: Visual editor support, dynamic content blocks, draft/published versions
 - **Tailwind CSS v4**: Utility-first styling with modern CSS features
 - **SEO Optimized**: Meta tags, Open Graph, Twitter Cards, JSON-LD schemas, sitemap
@@ -44,12 +45,31 @@ Create a `.env` file in the root directory:
 # Required
 STORYBLOK_TOKEN=your_storyblok_public_token
 SITE_URL=https://yourdomain.com
+PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxx
 
 # Optional
 STORYBLOK_REGION=eu  # or 'us' for US region
-IS_PREVIEW=false     # set to 'true' for preview mode
+IS_PREVIEW=false     # set to 'true' for Storyblok preview mode
+STORYBLOK_ENABLE_BRIDGE=false # enable only when a Storyblok story exists for the preview
 SITE_NAME=Pragma
 ```
+
+Use the Supabase **publishable key** (`sb_publishable_...`) for
+`PUBLIC_SUPABASE_PUBLISHABLE_KEY`. The legacy `PUBLIC_SUPABASE_ANON_KEY`
+is still accepted as a temporary fallback for existing local environments.
+
+OTP requests are restricted to addresses found in
+`public.pragma_inscriptions.email` or `public.pragma_inscriptions.email_discord`.
+Apply `supabase/migrations/002_eligible_otp.sql` after `001_learning.sql`.
+
+For local PKCE testing, request the OTP and open the email link in the same
+browser and on the same hostname used for the request. Do not switch between
+`localhost` and `127.0.0.1`, and do not copy the link to another browser/device.
+
+Supabase session cookies are HTTP-only and configured to persist for seven days.
+When a valid session cookie is present, visiting `/login` redirects directly to
+`/dashboard`.
 
 ### Development
 

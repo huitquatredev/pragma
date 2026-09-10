@@ -1,0 +1,40 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro';
+import { fetchStory, fetchStoriesByComponent } from '../../lib/storyblok';
+import { createSupabaseServerClient } from '../../lib/supabase';
+import { flattenCourses, getProgressIndex } from '../../lib/progress';
+import RichText from '../../components/app/RichText.astro';
+
+const story = await fetchStory(Astro.params.slug!);
+const supabase = createSupabaseServerClient(Astro);
+const { data: rows } = await supabase
+  .from('progress')
+  .select('cours_id, validated_at')
+  .eq('user_id', Astro.locals.user?.id);
+const validatedIds = getProgressIndex(rows ?? []);
+const parts = await fetchStoriesByComponent('partie');
+const courses = flattenCourses(parts);
+const position = courses.findIndex((course) => course.uuid === story.uuid);
+const previous = position > 0 ? courses[position - 1] : null;
+const next = position >= 0 && position < courses.length - 1 ? courses[position + 1] : null;
+const validated = validatedIds.has(story.uuid);
+---
+
+<AppLayout title={`${story.content.title} — Pragma Formation`}>
+  <main class="content-shell course-page">
+    <p class="eyebrow">COURS</p><h1>{story.content.title}</h1><div class="rich-text">
+      <RichText document={story.content.body} />
+    </div>
+    <form method="post" action={`/cours/${story.slug}/progress`}>
+      <input type="hidden" name="action" value={validated ? 'unvalidate' : 'validate'} /><button
+        class="button"
+        type="submit">{validated ? 'Annuler la validation' : 'Valider ce cours'}</button
+      >
+    </form>
+    <nav class="course-nav" aria-label="Navigation des cours">
+      {previous ? <a href={`/cours/${previous.slug}`}>← Précédent</a> : <span />}{
+        next ? <a href={`/cours/${next.slug}`}>Suivant →</a> : <span />
+      }
+    </nav>
+  </main>
+</AppLayout>

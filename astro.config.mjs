@@ -4,13 +4,12 @@ import sitemap from '@astrojs/sitemap';
 import vercel from '@astrojs/vercel';
 import { storyblok } from '@storyblok/astro';
 
-// Determine output mode based on IS_PREVIEW env variable
-const isPreview = process.env.IS_PREVIEW === 'true' || import.meta.env.IS_PREVIEW === 'true';
-
 // https://astro.build/config
 export default defineConfig({
-  // Use SSR (server) for preview mode, static for production
-  output: isPreview ? 'server' : 'static',
+  output: 'server',
+  devToolbar: {
+    enabled: false,
+  },
 
   adapter: vercel({
     webAnalytics: { enabled: true },
@@ -26,7 +25,8 @@ export default defineConfig({
       },
       enableFallbackComponent: true,
       customFallbackComponent: 'components/storyblok/StoryblokFallback',
-      bridge: true,
+      bridge:
+        import.meta.env.IS_PREVIEW === 'true' && import.meta.env.STORYBLOK_ENABLE_BRIDGE === 'true',
       apiOptions: {
         region: import.meta.env.STORYBLOK_REGION || 'eu',
       },

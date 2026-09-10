@@ -1,0 +1,55 @@
+---
+export const prerender = true;
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout
+  seo={{
+    title: 'Pragma Formation',
+    description: 'Des formations claires pour transformer vos pratiques.',
+  }}
+>
+  <div class="marketing-shell">
+    <header class="marketing-nav">
+      <strong>PRAGMA / FORMATION</strong><a href="/login">Accéder à la plateforme</a>
+    </header>
+    <section class="hero">
+      <p class="eyebrow">01 — Apprendre autrement</p>
+      <h1>Des idées nettes.<br /><em>Des pratiques solides.</em></h1>
+      <p class="hero-copy">
+        Des parcours de formation structurés pour comprendre, expérimenter et progresser avec
+        méthode.
+      </p>
+      <a class="button" href="#offre">Découvrir l’offre</a>
+      <img
+        src="https://images.unsplash.com/photo-1487958449943-2429e8be8625?auto=format&fit=crop&w=1600&q=85"
+        alt="Architecture abstraite en lumière et béton"
+      />
+    </section>
+    <section class="marketing-grid" id="presentation">
+      <p class="eyebrow">02 — La méthode</p><div>
+        <h2>Une formation pensée comme une architecture.</h2><p>
+          Chaque partie assemble des modules courts et des cours actionnables. Vous avancez à votre
+          rythme, avec une progression visible.
+        </p>
+      </div>
+    </section>
+    <section id="offre" class="offer">
+      <p class="eyebrow">03 — L’offre</p><h2>Un cadre clair pour aller plus loin.</h2>
+      <div class="offer-grid">
+        <article>
+          <span>01</span><h3>Fondamentaux</h3><p>Les concepts essentiels, expliqués sans détour.</p>
+        </article><article>
+          <span>02</span><h3>Pratique</h3><p>Des exercices pour transformer les idées en gestes.</p>
+        </article><article>
+          <span>03</span><h3>Progression</h3><p>Un parcours mesurable, construit pour durer.</p>
+        </article>
+      </div>
+    </section>
+    <section id="contact" class="contact">
+      <p class="eyebrow">04 — Contact</p><h2>Construisons la suite.</h2><a
+        href="mailto:bonjour@pragma-formation.fr">bonjour@pragma-formation.fr</a
+      >
+    </section>
+  </div>
+</Layout>

@@ -1,0 +1,38 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro';
+import ProgressBadge from '../../components/app/ProgressBadge.astro';
+import { fetchStory } from '../../lib/storyblok';
+import { createSupabaseServerClient } from '../../lib/supabase';
+import { getProgressIndex } from '../../lib/progress';
+import RichText from '../../components/app/RichText.astro';
+
+const story = await fetchStory(Astro.params.slug!);
+const supabase = createSupabaseServerClient(Astro);
+const { data: rows } = await supabase
+  .from('progress')
+  .select('cours_id, validated_at')
+  .eq('user_id', Astro.locals.user?.id);
+const validatedIds = getProgressIndex(rows ?? []);
+---
+
+<AppLayout title={`${story.content.title} — Pragma Formation`}>
+  <main class="content-shell">
+    <p class="eyebrow">MODULE</p><h1>{story.content.title}</h1><div class="rich-text">
+      <RichText document={story.content.body} />
+    </div>
+    <ul class="content-list">
+      {
+        (story.content.cours ?? []).map((course) => (
+          <li>
+            <a href={`/cours/${course.slug}`}>
+              <>
+                <span>{course.content.title}</span>
+                <ProgressBadge validated={validatedIds.has(course.uuid)} />
+              </>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </main>
+</AppLayout>

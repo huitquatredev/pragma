@@ -1,0 +1,36 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { createSupabaseServerClient } from '../lib/supabase';
+
+const supabase = createSupabaseServerClient(Astro);
+const {
+  data: { user },
+} = await supabase.auth.getUser();
+const error = Astro.url.searchParams.get('error');
+const next = Astro.url.searchParams.get('next') ?? '/dashboard';
+
+if (user) {
+  return Astro.redirect(next.startsWith('/') && !next.startsWith('//') ? next : '/dashboard');
+}
+---
+
+<Layout seo={{ title: 'Connexion — Pragma Formation', description: 'Connexion par email.' }}>
+  <main class="auth-page">
+    <p class="eyebrow">PRAGMA / FORMATION</p>
+    <h1>Votre espace d’apprentissage.</h1>
+    <p>Recevez un lien de connexion sécurisé par email.</p>
+    {
+      error && (
+        <p class="form-error" role="alert">
+          {error}
+        </p>
+      )
+    }
+    <form method="post" action="/auth/login" class="auth-form">
+      <input type="hidden" name="next" value={next} />
+      <label for="email">Adresse email</label>
+      <input id="email" name="email" type="email" autocomplete="email" required />
+      <button class="button" type="submit">Recevoir mon lien</button>
+    </form>
+  </main>
+</Layout>

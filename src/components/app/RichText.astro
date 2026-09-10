@@ -1,0 +1,12 @@
+---
+import { richTextResolver } from '@storyblok/richtext';
+
+interface Props {
+  document: unknown;
+}
+
+const { document } = Astro.props;
+const html = document ? richTextResolver().render(document as never) : '';
+---
+
+{html && <div set:html={html} />}

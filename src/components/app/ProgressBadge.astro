@@ -1,0 +1,10 @@
+---
+interface Props {
+  validated: boolean;
+}
+const { validated } = Astro.props;
+---
+
+<span class:list={['badge', { 'badge--success': validated }]}
+  >{validated ? 'Validé' : 'À faire'}</span
+>
