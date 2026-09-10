@@ -23,3 +23,17 @@ dist
 # IDE
 .vscode
 .idea
+
+# Config files (not source code)
+.prettierrc
+*.json
+*.js
+tsconfig*.json
+eslint.config.js
+astro.config.mjs
+tailwind.config.*
+postcss.config.*
+vite.config.*
+
+# TypeScript definition files
+src/env.d.ts

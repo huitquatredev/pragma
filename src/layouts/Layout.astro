@@ -1,5 +1,7 @@
 ---
+/// <reference types="astro/client" />
 import Head from './Head.astro';
+import Footer from './Footer.astro';
 import SkipLink from './SkipLink.astro';
 import '../styles/global.css';
 
@@ -20,14 +22,22 @@ const { seo } = Astro.props;
 
     <main>
       <slot />
+      <div class="min-h-[300vh] bg-slate-50"></div>
     </main>
 
-    <footer class="bg-gray-900 py-12 text-white">
-      <div class="container mx-auto px-4">
-        <p>
-          &copy; {new Date().getFullYear()} Pragma. All rights reserved.
-        </p>
-      </div>
-    </footer>
+    <Footer />
+
+    <script>
+      // Make GSAP and ScrollTrigger available globally on client-side
+      import('gsap').then((gsapModule) => {
+        const gsap = gsapModule.default || gsapModule;
+        import('gsap/ScrollTrigger').then((scrollTriggerModule) => {
+          const ScrollTrigger = scrollTriggerModule.default || scrollTriggerModule;
+          gsap.registerPlugin(ScrollTrigger);
+          window.gsap = gsap;
+          window.ScrollTrigger = ScrollTrigger;
+        });
+      });
+    </script>
   </body>
 </html>

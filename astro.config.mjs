@@ -4,8 +4,6 @@ import sitemap from '@astrojs/sitemap';
 import vercel from '@astrojs/vercel';
 import { storyblok } from '@storyblok/astro';
 
-import vercel from '@astrojs/vercel';
-
 // Determine output mode based on IS_PREVIEW env variable
 const isPreview = process.env.IS_PREVIEW === 'true' || import.meta.env.IS_PREVIEW === 'true';
 
