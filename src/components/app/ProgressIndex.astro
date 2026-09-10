@@ -1,0 +1,50 @@
+---
+import type { StoryblokStory } from '../../lib/storyblok';
+import { getModuleStatus, getPartStatus } from '../../lib/progress';
+import ProgressBadge from './ProgressBadge.astro';
+
+interface Props {
+  parts: StoryblokStory[];
+  validatedIds: Set<string>;
+}
+const { parts, validatedIds } = Astro.props;
+---
+
+<nav aria-label="Progression de la formation" class="progress-index">
+  {
+    parts.map((part) => {
+      const partStatus = getPartStatus(part, validatedIds);
+      return (
+        <details open>
+          <summary>
+            <span>{part.content.title}</span>
+            <span>
+              {partStatus.percentage}% <ProgressBadge validated={partStatus.validated} />
+            </span>
+          </summary>
+          <ul>
+            {(part.content.modules ?? []).map((module) => {
+              const status = getModuleStatus(module, validatedIds);
+              return (
+                <li>
+                  <a href={`/modules/${module.slug}`}>{module.content.title}</a>
+                  <span>
+                    {status.percentage}% <ProgressBadge validated={status.validated} />
+                  </span>
+                  <ul>
+                    {(module.content.cours ?? []).map((course) => (
+                      <li>
+                        <a href={`/cours/${course.slug}`}>{course.content.title}</a>
+                        <ProgressBadge validated={validatedIds.has(course.uuid)} />
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              );
+            })}
+          </ul>
+        </details>
+      );
+    })
+  }
+</nav>

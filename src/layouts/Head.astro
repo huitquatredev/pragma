@@ -33,12 +33,9 @@ const safeSeo = seo || {
 
   {safeSeo.robots && <meta name="robots" content={safeSeo.robots} />}
 
-  <link rel="icon" type="image/png" href="/favicons/favicon-96x96.png" sizes="96x96" />
-  <link rel="icon" type="image/svg+xml" href="/favicons/favicon.svg" />
-  <link rel="shortcut icon" href="/favicons/favicon.ico" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="shortcut icon" href="/favicon.ico" />
   <meta name="apple-mobile-web-app-title" content={import.meta.env.SITE_NAME} />
-  <link rel="manifest" href="/favicons/site.webmanifest" />
 
   {safeSeo.title && <meta property="og:title" content={safeSeo.title} />}
   <meta property="og:type" content="website" />

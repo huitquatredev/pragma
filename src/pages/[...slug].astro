@@ -2,10 +2,15 @@
 import { useStoryblokApi } from '@storyblok/astro';
 import StoryblokComponent from '@storyblok/astro/StoryblokComponent.astro';
 import Layout from '../layouts/Layout.astro';
+import type { StoryblokStory } from '../lib/storyblok';
 
 const storyblokApi = useStoryblokApi();
 const { slug } = Astro.params;
 const isPreview = import.meta.env.IS_PREVIEW === 'true';
+interface Props {
+  story?: StoryblokStory;
+}
+const { story: staticStory } = Astro.props as Props;
 
 // For SSG: Generate static paths for all stories
 export async function getStaticPaths() {
@@ -21,7 +26,7 @@ export async function getStaticPaths() {
     starts_with: '',
   });
 
-  return data.stories.map((story) => ({
+  return (data.stories as StoryblokStory[]).map((story) => ({
     params: {
       slug: story.full_slug === 'home' || story.full_slug === '' ? undefined : story.full_slug,
     },
@@ -29,7 +34,7 @@ export async function getStaticPaths() {
   }));
 }
 
-let story;
+let story: StoryblokStory | undefined;
 
 if (isPreview) {
   // SSR mode: fetch on-demand for Storyblok visual editor
@@ -40,7 +45,7 @@ if (isPreview) {
   story = data.story;
 } else {
   // SSG mode: story comes from getStaticPaths props
-  story = Astro.props.story;
+  story = staticStory;
 }
 
 // Guard: If story is undefined (e.g., static assets routed through), return 404
@@ -70,5 +75,5 @@ const seo = {
 ---
 
 <Layout {seo}>
-  <StoryblokComponent blok={story.content} />
+  <StoryblokComponent blok={story.content as never} />
 </Layout>
