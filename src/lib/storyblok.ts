@@ -1,5 +1,7 @@
 import { useStoryblokApi } from '@storyblok/astro';
 
+const isPreview = () => process.env.IS_PREVIEW === 'true' || import.meta.env.IS_PREVIEW === 'true';
+
 export interface StoryblokStory {
   uuid: string;
   slug: string;
@@ -37,7 +39,7 @@ export function getStoryblokApi() {
 export async function fetchStory(slug: string) {
   const api = getStoryblokApi();
   const opts = {
-    version: (import.meta.env.IS_PREVIEW === 'true' ? 'draft' : 'published') as
+    version: (isPreview() ? 'draft' : 'published') as
       | 'draft'
       | 'published',
     token: import.meta.env.STORYBLOK_TOKEN,
@@ -80,7 +82,7 @@ export async function fetchStory(slug: string) {
 export async function fetchStoriesByComponent(component: string) {
   const api = getStoryblokApi();
   const { data } = await api.get('cdn/stories', {
-    version: import.meta.env.IS_PREVIEW === 'true' ? 'draft' : 'published',
+    version: isPreview() ? 'draft' : 'published',
     token: import.meta.env.STORYBLOK_TOKEN,
     filter_query: { component: { in: component } },
     resolve_relations: 'partie.modules,module.cours',
@@ -91,7 +93,7 @@ export async function fetchStoriesByComponent(component: string) {
 export async function fetchFormationIndex(): Promise<StoryblokStory[]> {
   const api = getStoryblokApi();
   const { data } = await api.get('cdn/stories/parties/index-general', {
-    version: import.meta.env.IS_PREVIEW === 'true' ? 'draft' : 'published',
+    version: isPreview() ? 'draft' : 'published',
     token: import.meta.env.STORYBLOK_TOKEN,
     resolve_relations: 'index.parties_list,partie.modules,module.cours',
   });

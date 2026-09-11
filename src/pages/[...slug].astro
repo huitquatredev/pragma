@@ -21,7 +21,7 @@ export async function getStaticPaths() {
   const sbApi = useStoryblokApi();
 
   // Use 'draft' version in preview mode, 'published' otherwise
-  const isPreview = import.meta.env.IS_PREVIEW === 'true';
+const isPreview = process.env.IS_PREVIEW === 'true' || import.meta.env.IS_PREVIEW === 'true';
   const version = isPreview ? 'draft' : 'published';
 
   const { data } = await sbApi.get('cdn/stories', {
