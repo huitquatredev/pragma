@@ -1,5 +1,6 @@
 ---
 import AppLayout from '../../layouts/AppLayout.astro';
+import Breadcrumb from '../../components/app/Breadcrumb.astro';
 import { fetchStory, fetchStoriesByComponent, type SectionText } from '../../lib/storyblok';
 import { createSupabaseServerClient, previewInscription } from '../../lib/supabase';
 import { flattenCourses, getProgressIndex, hasCourseAccess } from '../../lib/progress';
@@ -29,11 +30,27 @@ const position = courses.findIndex((course) => course.uuid === story.uuid);
 const previous = position > 0 ? courses[position - 1] : null;
 const next = position >= 0 && position < courses.length - 1 ? courses[position + 1] : null;
 const validated = validatedIds.has(story.uuid);
+
+const parentPart = parts.find((p) =>
+  (p.content.modules ?? []).some((m) =>
+    (m.content.cours ?? []).some((c) => c.uuid === story.uuid)
+  )
+);
+const parentModule = parentPart
+  ? (parentPart.content.modules ?? []).find((m) =>
+      (m.content.cours ?? []).some((c) => c.uuid === story.uuid)
+    )
+  : null;
 ---
 
 <AppLayout title={`${story.content.title} — Pragma Formation`}>
   <main class="content-shell course-page">
     <p class="eyebrow">COURS</p><h1>{story.content.title}</h1>
+    <Breadcrumb items={[
+      ...(parentPart ? [{ label: parentPart.content.title, href: `/parties/${parentPart.slug}` }] : []),
+      ...(parentModule ? [{ label: parentModule.content.title, href: `/modules/${parentModule.slug}` }] : []),
+      { label: story.content.title },
+    ]} />
     {(story.content.body as SectionText[] ?? []).map((section) => (
       <div class="section-text">
         {section.titre && <h2>{section.titre}</h2>}
