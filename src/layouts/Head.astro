@@ -2,7 +2,6 @@
 import Analytics from '@vercel/analytics/astro';
 
 const { seo } = Astro.props;
-console.log('SEO props:', seo);
 
 // Guard against undefined seo
 const safeSeo = seo || {

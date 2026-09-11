@@ -1,7 +1,6 @@
 ---
 /// <reference types="astro/client" />
 import Head from './Head.astro';
-import Footer from './Footer.astro';
 import SkipLink from './SkipLink.astro';
 import '../styles/global.css';
 
@@ -22,10 +21,7 @@ const { seo } = Astro.props;
 
     <main>
       <slot />
-      <div class="min-h-[300vh] bg-slate-50"></div>
     </main>
-
-    <Footer />
 
     <script>
       // Make GSAP and ScrollTrigger available globally on client-side
