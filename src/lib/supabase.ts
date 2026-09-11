@@ -45,6 +45,13 @@ export interface Inscription {
   last_name: string | null;
 }
 
+export const previewInscription: Inscription = {
+  upgrade: true,
+  camille: true,
+  first_name: null,
+  last_name: null,
+};
+
 export async function getInscription(
   supabase: ReturnType<typeof createSupabaseServerClient>,
   email: string

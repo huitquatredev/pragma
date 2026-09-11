@@ -2,18 +2,23 @@
 import AppLayout from '../../layouts/AppLayout.astro';
 import ProgressBadge from '../../components/app/ProgressBadge.astro';
 import { fetchStory } from '../../lib/storyblok';
-import { createSupabaseServerClient } from '../../lib/supabase';
+import { createSupabaseServerClient, previewInscription } from '../../lib/supabase';
 import { getProgressIndex, hasCourseAccess } from '../../lib/progress';
 import RichText from '../../components/app/RichText.astro';
 
+const isPreview = process.env.IS_PREVIEW === 'true' || import.meta.env.IS_PREVIEW === 'true';
 const story = await fetchStory(Astro.params.slug!);
-const inscription = Astro.locals.inscription;
-const supabase = createSupabaseServerClient(Astro);
-const { data: rows } = await supabase
-  .from('progress')
-  .select('cours_id, validated_at')
-  .eq('user_id', Astro.locals.user?.id);
-const validatedIds = getProgressIndex(rows ?? []);
+const inscription = isPreview ? previewInscription : Astro.locals.inscription;
+
+let validatedIds = new Set<string>();
+if (!isPreview) {
+  const supabase = createSupabaseServerClient(Astro);
+  const { data: rows } = await supabase
+    .from('progress')
+    .select('cours_id, validated_at')
+    .eq('user_id', Astro.locals.user?.id);
+  validatedIds = getProgressIndex(rows ?? []);
+}
 ---
 
 <AppLayout title={`${story.content.title} — Pragma Formation`}>

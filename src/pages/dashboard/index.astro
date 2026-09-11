@@ -2,21 +2,27 @@
 import AppLayout from '../../layouts/AppLayout.astro';
 import ProgressIndex from '../../components/app/ProgressIndex.astro';
 import { fetchFormationIndex } from '../../lib/storyblok';
-import { createSupabaseServerClient } from '../../lib/supabase';
+import { createSupabaseServerClient, previewInscription } from '../../lib/supabase';
 import { getFirstIncompleteCourse, getProgressIndex } from '../../lib/progress';
 
-const supabase = createSupabaseServerClient(Astro);
-const inscription = Astro.locals.inscription;
+const isPreview = process.env.IS_PREVIEW === 'true' || import.meta.env.IS_PREVIEW === 'true';
+const inscription = isPreview ? previewInscription : Astro.locals.inscription;
 const displayName = inscription?.first_name || inscription?.last_name
   ? [inscription.first_name, inscription.last_name].filter(Boolean).join(' ')
   : Astro.locals.user?.email ?? '';
 const parts = await fetchFormationIndex();
-const { data: rows, error } = await supabase
-  .from('progress')
-  .select('cours_id, validated_at')
-  .eq('user_id', Astro.locals.user?.id);
-if (error) throw error;
-const validatedIds = getProgressIndex(rows ?? []);
+
+let validatedIds = new Set<string>();
+if (!isPreview) {
+  const supabase = createSupabaseServerClient(Astro);
+  const { data: rows, error } = await supabase
+    .from('progress')
+    .select('cours_id, validated_at')
+    .eq('user_id', Astro.locals.user?.id);
+  if (error) throw error;
+  validatedIds = getProgressIndex(rows ?? []);
+}
+
 const nextCourse = inscription
   ? getFirstIncompleteCourse(parts, validatedIds, inscription)
   : null;

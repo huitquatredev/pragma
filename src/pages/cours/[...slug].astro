@@ -1,23 +1,28 @@
 ---
 import AppLayout from '../../layouts/AppLayout.astro';
 import { fetchStory, fetchStoriesByComponent } from '../../lib/storyblok';
-import { createSupabaseServerClient } from '../../lib/supabase';
+import { createSupabaseServerClient, previewInscription } from '../../lib/supabase';
 import { flattenCourses, getProgressIndex, hasCourseAccess } from '../../lib/progress';
 import RichText from '../../components/app/RichText.astro';
 
+const isPreview = process.env.IS_PREVIEW === 'true' || import.meta.env.IS_PREVIEW === 'true';
 const story = await fetchStory(Astro.params.slug!);
-const inscription = Astro.locals.inscription;
+const inscription = isPreview ? previewInscription : Astro.locals.inscription;
 
 if (inscription && !hasCourseAccess(story, inscription)) {
   return new Response('Accès non autorisé.', { status: 403 });
 }
 
-const supabase = createSupabaseServerClient(Astro);
-const { data: rows } = await supabase
-  .from('progress')
-  .select('cours_id, validated_at')
-  .eq('user_id', Astro.locals.user?.id);
-const validatedIds = getProgressIndex(rows ?? []);
+let validatedIds = new Set<string>();
+if (!isPreview) {
+  const supabase = createSupabaseServerClient(Astro);
+  const { data: rows } = await supabase
+    .from('progress')
+    .select('cours_id, validated_at')
+    .eq('user_id', Astro.locals.user?.id);
+  validatedIds = getProgressIndex(rows ?? []);
+}
+
 const parts = await fetchStoriesByComponent('partie');
 const courses = inscription ? flattenCourses(parts, inscription) : [];
 const position = courses.findIndex((course) => course.uuid === story.uuid);
