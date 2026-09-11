@@ -54,7 +54,7 @@ const partNumber = partIndex >= 0 ? partIndex : null;
             <li>
               <a href={`/modules/${module.slug}`}>
                 <>
-                  <span>MODULE {moduleIndex} — {module.content.title}</span>
+                  <span>MODULE {moduleIndex + 1} — {module.content.title}</span>
                   <span>
                     {status.percentage}% <ProgressBadge validated={status.validated} />
                   </span>

@@ -36,10 +36,10 @@ const partNumber = allParts.findIndex((p) => p.uuid === parentPart?.uuid);
 
 <AppLayout title={`${story.content.title} — Pragma Formation`}>
   <main class="content-shell">
-    <p class="eyebrow">MODULE {moduleIndex >= 0 ? moduleIndex : ''}</p><h1>{story.content.title}</h1>
+    <p class="eyebrow">MODULE {moduleIndex >= 0 ? moduleIndex + 1 : ''}</p><h1>{story.content.title}</h1>
     <Breadcrumb items={[
       ...(parentPart ? [{ label: parentPart.content.title, href: `/parties/${parentPart.slug}`, level: 'PARTIE', number: partNumber }] : []),
-      { label: story.content.title, level: 'MODULE', number: moduleIndex >= 0 ? moduleIndex : null },
+      { label: story.content.title, level: 'MODULE', number: moduleIndex >= 0 ? moduleIndex + 1 : null },
     ]} />
     {(story.content.body as SectionText[] ?? []).map((section) => (
       <div class="section-text">
@@ -63,7 +63,7 @@ const partNumber = allParts.findIndex((p) => p.uuid === parentPart?.uuid);
             <li>
               <a href={`/cours/${course.slug}`}>
                 <>
-                  <span>COURS {courseIndex} — {course.content.title}</span>
+                  <span>{course.content.title}</span>
                   <ProgressBadge validated={validatedIds.has(course.uuid)} />
                 </>
               </a>

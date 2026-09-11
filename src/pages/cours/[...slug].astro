@@ -55,10 +55,10 @@ const partNumber = allParts.findIndex((p) => p.uuid === parentPart?.uuid);
 
 <AppLayout title={`${story.content.title} — Pragma Formation`}>
   <main class="content-shell course-page">
-    <p class="eyebrow">COURS {coursIndex >= 0 ? coursIndex : ''}</p><h1>{story.content.title}</h1>
+    <p class="eyebrow">COURS</p><h1>{story.content.title}</h1>
     <Breadcrumb items={[
       ...(parentPart ? [{ label: parentPart.content.title, href: `/parties/${parentPart.slug}`, level: 'PARTIE', number: partNumber }] : []),
-      ...(parentModule ? [{ label: parentModule.content.title, href: `/modules/${parentModule.slug}`, level: 'MODULE', number: moduleIndex >= 0 ? moduleIndex : null }] : []),
+      ...(parentModule ? [{ label: parentModule.content.title, href: `/modules/${parentModule.slug}`, level: 'MODULE', number: moduleIndex >= 0 ? moduleIndex + 1 : null }] : []),
       { label: story.content.title },
     ]} />
     {(story.content.body as SectionText[] ?? []).map((section) => (
