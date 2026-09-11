@@ -1,53 +1,43 @@
 ---
 import AppLayout from '../../layouts/AppLayout.astro';
 import ProgressIndex from '../../components/app/ProgressIndex.astro';
-import { fetchStoriesByComponent } from '../../lib/storyblok';
+import { fetchFormationIndex } from '../../lib/storyblok';
 import { createSupabaseServerClient } from '../../lib/supabase';
 import { getFirstIncompleteCourse, getProgressIndex } from '../../lib/progress';
 
 const supabase = createSupabaseServerClient(Astro);
-const parts = await fetchStoriesByComponent('partie');
+const inscription = Astro.locals.inscription;
+const displayName = inscription?.first_name || inscription?.last_name
+  ? [inscription.first_name, inscription.last_name].filter(Boolean).join(' ')
+  : Astro.locals.user?.email ?? '';
+const parts = await fetchFormationIndex();
 const { data: rows, error } = await supabase
   .from('progress')
   .select('cours_id, validated_at')
   .eq('user_id', Astro.locals.user?.id);
 if (error) throw error;
 const validatedIds = getProgressIndex(rows ?? []);
-const nextCourse = getFirstIncompleteCourse(parts, validatedIds);
-const accessExpired = Astro.url.searchParams.get('access') === 'expired';
+const nextCourse = inscription
+  ? getFirstIncompleteCourse(parts, validatedIds, inscription)
+  : null;
 ---
 
 <AppLayout title="Dashboard — Pragma Formation">
   <main class="app-shell">
     <div class="page-heading">
       <p class="eyebrow">ESPACE PERSONNEL</p><h1>
-        Bonjour{Astro.locals.user?.email ? `, ${Astro.locals.user.email}` : ''}.
+        Bonjour{displayName ? `, ${displayName}` : ''}.
       </h1><p>Votre parcours, en un regard.</p>
     </div>
     {
-      accessExpired && (
-        <p class="form-error" role="alert">
-          Votre accès à la formation est expiré.
-        </p>
-      )
-    }
-    <div class="dashboard-meta">
-      <span
-        >Accès jusqu’au <strong
-          >{
-            Astro.locals.accessEndDate
-              ? new Date(Astro.locals.accessEndDate).toLocaleDateString('fr-FR')
-              : '—'
-          }</strong
-        ></span
-      >{
-        nextCourse && (
+      nextCourse && (
+        <div class="dashboard-meta">
           <a class="button" href={`/cours/${nextCourse.slug}`}>
             Aller au prochain cours non validé
           </a>
-        )
-      }
-    </div>
-    <ProgressIndex {parts} {validatedIds} />
+        </div>
+      )
+    }
+    {inscription && <ProgressIndex {parts} {validatedIds} {inscription} />}
   </main>
 </AppLayout>

@@ -1,49 +1,57 @@
 ---
 import type { StoryblokStory } from '../../lib/storyblok';
+import type { Inscription } from '../../lib/supabase';
 import { getModuleStatus, getPartStatus } from '../../lib/progress';
 import ProgressBadge from './ProgressBadge.astro';
 
 interface Props {
   parts: StoryblokStory[];
   validatedIds: Set<string>;
+  inscription: Inscription;
 }
-const { parts, validatedIds } = Astro.props;
+const { parts, validatedIds, inscription } = Astro.props;
 ---
 
 <nav aria-label="Progression de la formation" class="progress-index">
   {
     parts.map((part) => {
-      const partStatus = getPartStatus(part, validatedIds);
+      const partStatus = getPartStatus(part, validatedIds, inscription);
       return (
-        <details open>
-          <summary>
+        <div>
+          <a href={`/parties/${part.slug}`} class="progress-index-part">
             <span>{part.content.title}</span>
             <span>
               {partStatus.percentage}% <ProgressBadge validated={partStatus.validated} />
             </span>
-          </summary>
-          <ul>
-            {(part.content.modules ?? []).map((module) => {
-              const status = getModuleStatus(module, validatedIds);
-              return (
-                <li>
-                  <a href={`/modules/${module.slug}`}>{module.content.title}</a>
-                  <span>
-                    {status.percentage}% <ProgressBadge validated={status.validated} />
-                  </span>
-                  <ul>
-                    {(module.content.cours ?? []).map((course) => (
-                      <li>
-                        <a href={`/cours/${course.slug}`}>{course.content.title}</a>
-                        <ProgressBadge validated={validatedIds.has(course.uuid)} />
-                      </li>
-                    ))}
-                  </ul>
-                </li>
-              );
-            })}
-          </ul>
-        </details>
+          </a>
+          {!partStatus.validated && (
+            <ul>
+              {(part.content.modules ?? []).map((module) => {
+                const status = getModuleStatus(module, validatedIds, inscription);
+                return (
+                  <li>
+                    <a href={`/modules/${module.slug}`}>{module.content.title}</a>
+                    <span>
+                      {status.percentage}% <ProgressBadge validated={status.validated} />
+                    </span>
+                     <ul>
+                      {(module.content.cours ?? [])
+                        .filter((c) => c.content)
+                        .filter((c) => !c.content.upgrade || inscription.upgrade)
+                        .filter((c) => !c.content.option_camille || inscription.camille)
+                        .map((course) => (
+                          <li>
+                            <a href={`/cours/${course.slug}`}>{course.content.title}</a>
+                            <ProgressBadge validated={validatedIds.has(course.uuid)} />
+                          </li>
+                        ))}
+                    </ul>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
       );
     })
   }
