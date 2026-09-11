@@ -32,7 +32,7 @@ const partNumber = partIndex >= 0 ? partIndex : null;
 <AppLayout title={`${story.content.title} — Pragma Formation`}>
   <main class="content-shell">
     <p class="eyebrow">PARTIE {partNumber != null ? `${partNumber}` : ''}</p><h1>{story.content.title}</h1>
-    <Breadcrumb items={[{ label: story.content.title }]} />
+    <Breadcrumb items={[{ label: story.content.title, level: 'PARTIE', number: partNumber }]} />
     {(story.content.body as SectionText[] ?? []).map((section) => (
       <div class="section-text">
         {section.titre && <h2>{section.titre}</h2>}
@@ -48,13 +48,13 @@ const partNumber = partIndex >= 0 ? partIndex : null;
     ))}
     <ul class="content-list">
       {
-        inscription && (story.content.modules ?? []).map((module) => {
+        inscription && (story.content.modules ?? []).map((module, moduleIndex) => {
           const status = getModuleStatus(module, validatedIds, inscription);
           return (
             <li>
               <a href={`/modules/${module.slug}`}>
                 <>
-                  <span>{module.content.title}</span>
+                  <span>MODULE {moduleIndex} — {module.content.title}</span>
                   <span>
                     {status.percentage}% <ProgressBadge validated={status.validated} />
                   </span>

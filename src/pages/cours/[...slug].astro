@@ -41,14 +41,24 @@ const parentModule = parentPart
       (m.content.cours ?? []).some((c) => c.uuid === story.uuid)
     )
   : null;
+const moduleIndex = parentPart && parentModule
+  ? (parentPart.content.modules ?? []).findIndex((m) => m.uuid === parentModule.uuid)
+  : -1;
+const coursIndex = parentModule
+  ? (parentModule.content.cours ?? []).findIndex((c) => c.uuid === story.uuid)
+  : -1;
+
+const { fetchFormationIndex } = await import('../../lib/storyblok');
+const allParts = await fetchFormationIndex();
+const partNumber = allParts.findIndex((p) => p.uuid === parentPart?.uuid);
 ---
 
 <AppLayout title={`${story.content.title} — Pragma Formation`}>
   <main class="content-shell course-page">
-    <p class="eyebrow">COURS</p><h1>{story.content.title}</h1>
+    <p class="eyebrow">COURS {coursIndex >= 0 ? coursIndex : ''}</p><h1>{story.content.title}</h1>
     <Breadcrumb items={[
-      ...(parentPart ? [{ label: parentPart.content.title, href: `/parties/${parentPart.slug}` }] : []),
-      ...(parentModule ? [{ label: parentModule.content.title, href: `/modules/${parentModule.slug}` }] : []),
+      ...(parentPart ? [{ label: parentPart.content.title, href: `/parties/${parentPart.slug}`, level: 'PARTIE', number: partNumber }] : []),
+      ...(parentModule ? [{ label: parentModule.content.title, href: `/modules/${parentModule.slug}`, level: 'MODULE', number: moduleIndex >= 0 ? moduleIndex : null }] : []),
       { label: story.content.title },
     ]} />
     {(story.content.body as SectionText[] ?? []).map((section) => (

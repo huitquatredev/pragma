@@ -25,14 +25,21 @@ const parts = await fetchStoriesByComponent('partie');
 const parentPart = parts.find((p) =>
   (p.content.modules ?? []).some((m) => m.uuid === story.uuid)
 );
+const moduleIndex = parentPart
+  ? (parentPart.content.modules ?? []).findIndex((m) => m.uuid === story.uuid)
+  : -1;
+
+const { fetchFormationIndex } = await import('../../lib/storyblok');
+const allParts = await fetchFormationIndex();
+const partNumber = allParts.findIndex((p) => p.uuid === parentPart?.uuid);
 ---
 
 <AppLayout title={`${story.content.title} — Pragma Formation`}>
   <main class="content-shell">
-    <p class="eyebrow">MODULE</p><h1>{story.content.title}</h1>
+    <p class="eyebrow">MODULE {moduleIndex >= 0 ? moduleIndex : ''}</p><h1>{story.content.title}</h1>
     <Breadcrumb items={[
-      ...(parentPart ? [{ label: parentPart.content.title, href: `/parties/${parentPart.slug}` }] : []),
-      { label: story.content.title },
+      ...(parentPart ? [{ label: parentPart.content.title, href: `/parties/${parentPart.slug}`, level: 'PARTIE', number: partNumber }] : []),
+      { label: story.content.title, level: 'MODULE', number: moduleIndex >= 0 ? moduleIndex : null },
     ]} />
     {(story.content.body as SectionText[] ?? []).map((section) => (
       <div class="section-text">
@@ -52,11 +59,11 @@ const parentPart = parts.find((p) =>
         (story.content.cours ?? [])
           .filter((c) => c.content)
           .filter((c) => !inscription || hasCourseAccess(c, inscription))
-          .map((course) => (
+          .map((course, courseIndex) => (
             <li>
               <a href={`/cours/${course.slug}`}>
                 <>
-                  <span>{course.content.title}</span>
+                  <span>COURS {courseIndex} — {course.content.title}</span>
                   <ProgressBadge validated={validatedIds.has(course.uuid)} />
                 </>
               </a>

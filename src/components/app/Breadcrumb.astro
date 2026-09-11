@@ -2,6 +2,8 @@
 interface Crumb {
   label: string;
   href?: string;
+  level?: string;
+  number?: number | null;
 }
 
 interface Props {
@@ -13,12 +15,15 @@ const { items } = Astro.props;
 
 <nav class="breadcrumb" aria-label="Fil d'Ariane">
   <a href="/dashboard">Dashboard</a>
-  {items.map((item) => (
-    <>
-      <span class="breadcrumb-sep">/</span>
-      {item.href ? <a href={item.href}>{item.label}</a> : <span>{item.label}</span>}
-    </>
-  ))}
+  {items.map((item) => {
+    const display = item.number != null && item.level ? `${item.level} ${item.number}` : item.label;
+    return (
+      <>
+        <span class="breadcrumb-sep">/</span>
+        {item.href ? <a href={item.href}>{display}</a> : <span>{display}</span>}
+      </>
+    );
+  })}
 </nav>
 
 <style>
