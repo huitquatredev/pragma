@@ -1,10 +1,10 @@
 ---
 import AppLayout from '../../layouts/AppLayout.astro';
 import ProgressBadge from '../../components/app/ProgressBadge.astro';
-import { fetchStory } from '../../lib/storyblok';
+import RichText from '../../components/app/RichText.astro';
+import { fetchStory, type SectionText } from '../../lib/storyblok';
 import { createSupabaseServerClient, previewInscription } from '../../lib/supabase';
 import { getProgressIndex, hasCourseAccess } from '../../lib/progress';
-import RichText from '../../components/app/RichText.astro';
 
 const isPreview = process.env.IS_PREVIEW === 'true' || import.meta.env.IS_PREVIEW === 'true';
 const story = await fetchStory(Astro.params.slug!);
@@ -23,9 +23,20 @@ if (!isPreview) {
 
 <AppLayout title={`${story.content.title} — Pragma Formation`}>
   <main class="content-shell">
-    <p class="eyebrow">MODULE</p><h1>{story.content.title}</h1><div class="rich-text">
-      <RichText document={story.content.body} />
-    </div>
+    <p class="eyebrow">MODULE</p><h1>{story.content.title}</h1>
+    {(story.content.body as SectionText[] ?? []).map((section) => (
+      <div class="section-text">
+        {section.titre && <h2>{section.titre}</h2>}
+        {section.corps && (
+          <div class="rich-text">
+            <RichText document={section.corps} />
+          </div>
+        )}
+        {section.bouton_text && section.bouton_lien?.url && (
+          <a class="button" href={section.bouton_lien.url}>{section.bouton_text}</a>
+        )}
+      </div>
+    ))}
     <ul class="content-list">
       {
         (story.content.cours ?? [])
