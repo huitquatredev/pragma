@@ -7,6 +7,10 @@ import type { StoryblokStory } from '../lib/storyblok';
 const storyblokApi = useStoryblokApi();
 const { slug } = Astro.params;
 const isPreview = import.meta.env.IS_PREVIEW === 'true';
+
+if (slug === 'parties/index-general' || slug?.endsWith('/index-general')) {
+  return new Response(null, { status: 404, statusText: 'Not found' });
+}
 interface Props {
   story?: StoryblokStory;
 }

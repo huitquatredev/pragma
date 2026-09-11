@@ -7,6 +7,9 @@ import { createSupabaseServerClient } from '../../lib/supabase';
 import { getModuleStatus, getProgressIndex } from '../../lib/progress';
 
 const story = await fetchStory(Astro.params.slug!);
+if (Astro.params.slug === 'index-general') {
+  return new Response(null, { status: 404, statusText: 'Not found' });
+}
 const inscription = Astro.locals.inscription;
 const supabase = createSupabaseServerClient(Astro);
 const { data: rows } = await supabase

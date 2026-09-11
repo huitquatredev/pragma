@@ -4,6 +4,14 @@ import { createSupabaseServerClient, getInscription } from './lib/supabase';
 const protectedPrefixes = ['/dashboard', '/parties', '/modules', '/cours'];
 
 export const onRequest = defineMiddleware(async (context, next) => {
+  const isPreview = import.meta.env.IS_PREVIEW === 'true';
+
+  if (isPreview) {
+    context.locals.user = null;
+    context.locals.inscription = null;
+    return next();
+  }
+
   const isProtected = protectedPrefixes.some((prefix) => context.url.pathname.startsWith(prefix));
   if (!isProtected) {
     context.locals.user = null;
