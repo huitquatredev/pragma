@@ -2,10 +2,16 @@
 import AppLayout from '../../layouts/AppLayout.astro';
 import { fetchStory, fetchStoriesByComponent } from '../../lib/storyblok';
 import { createSupabaseServerClient } from '../../lib/supabase';
-import { flattenCourses, getProgressIndex } from '../../lib/progress';
+import { flattenCourses, getProgressIndex, hasCourseAccess } from '../../lib/progress';
 import RichText from '../../components/app/RichText.astro';
 
 const story = await fetchStory(Astro.params.slug!);
+const inscription = Astro.locals.inscription;
+
+if (inscription && !hasCourseAccess(story, inscription)) {
+  return new Response('Accès non autorisé.', { status: 403 });
+}
+
 const supabase = createSupabaseServerClient(Astro);
 const { data: rows } = await supabase
   .from('progress')
@@ -13,7 +19,7 @@ const { data: rows } = await supabase
   .eq('user_id', Astro.locals.user?.id);
 const validatedIds = getProgressIndex(rows ?? []);
 const parts = await fetchStoriesByComponent('partie');
-const courses = flattenCourses(parts);
+const courses = inscription ? flattenCourses(parts, inscription) : [];
 const position = courses.findIndex((course) => course.uuid === story.uuid);
 const previous = position > 0 ? courses[position - 1] : null;
 const next = position >= 0 && position < courses.length - 1 ? courses[position + 1] : null;

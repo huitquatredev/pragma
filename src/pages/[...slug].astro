@@ -26,7 +26,9 @@ export async function getStaticPaths() {
     starts_with: '',
   });
 
-  return (data.stories as StoryblokStory[]).map((story) => ({
+  return (data.stories as StoryblokStory[])
+    .filter((story) => story.full_slug !== 'parties/index-general')
+    .map((story) => ({
     params: {
       slug: story.full_slug === 'home' || story.full_slug === '' ? undefined : story.full_slug,
     },
@@ -55,8 +57,6 @@ if (!story) {
     statusText: 'Not found',
   });
 }
-
-console.log('Rendering page with story:', story);
 
 const seo = {
   title: story ? story.content?.title : 'Page non trouvée',
