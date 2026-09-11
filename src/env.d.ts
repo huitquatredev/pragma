@@ -12,16 +12,16 @@ declare module "gsap/ScrollTrigger" {
 
 declare global {
   interface Window {
-    gsap: typeof import("gsap");
-    ScrollTrigger: typeof import("gsap/ScrollTrigger").default;
+    gsap: any;
+    ScrollTrigger: any;
+  }
+
+  namespace App {
+    interface Locals {
+      user: import('@supabase/supabase-js').User | null;
+      inscription: import('./lib/supabase').Inscription | null;
+    }
   }
 }
 
 export {};
-
-declare namespace App {
-  interface Locals {
-    user: import('@supabase/supabase-js').User | null;
-    accessEndDate: string | null;
-  }
-}

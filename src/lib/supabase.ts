@@ -38,20 +38,40 @@ export function createSupabaseServerClient(context: APIContext) {
   });
 }
 
-export async function getAccessEndDate(
-  supabase: ReturnType<typeof createSupabaseServerClient>,
-  userId: string
-) {
-  const { data, error } = await supabase
-    .from('user_access')
-    .select('access_end_date')
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  if (error) throw error;
-  return data?.access_end_date ?? null;
+export interface Inscription {
+  upgrade: boolean;
+  camille: boolean;
+  first_name: string | null;
+  last_name: string | null;
 }
 
-export function hasActiveAccess(accessEndDate: string | null) {
-  return Boolean(accessEndDate && new Date(accessEndDate).getTime() > Date.now());
+export async function getInscription(
+  supabase: ReturnType<typeof createSupabaseServerClient>,
+  email: string
+): Promise<Inscription | null> {
+  const trimmed = email.trim();
+  let { data, error } = await supabase
+    .from('pragma_inscriptions')
+    .select('upgrade, camille, first_name, last_name')
+    .ilike('email', trimmed)
+    .limit(1)
+    .maybeSingle();
+
+  if (!data) {
+    ({ data, error } = await supabase
+      .from('pragma_inscriptions')
+      .select('upgrade, camille, first_name, last_name')
+      .ilike('email_discord', trimmed)
+      .limit(1)
+      .maybeSingle());
+  }
+
+  if (error) throw error;
+  if (!data) return null;
+  return {
+    upgrade: Boolean(data.upgrade),
+    camille: Boolean(data.camille),
+    first_name: data.first_name ?? null,
+    last_name: data.last_name ?? null,
+  };
 }
