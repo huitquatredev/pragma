@@ -13,12 +13,16 @@ const inscription = isPreview ? previewInscription : Astro.locals.inscription;
 
 let validatedIds = new Set<string>();
 if (!isPreview) {
-  const supabase = createSupabaseServerClient(Astro);
-  const { data: rows } = await supabase
-    .from('progress')
-    .select('cours_id, validated_at')
-    .eq('user_id', Astro.locals.user?.id);
-  validatedIds = getProgressIndex(rows ?? []);
+  try {
+    const supabase = createSupabaseServerClient(Astro);
+    const { data: rows } = await supabase
+      .from('progress')
+      .select('cours_id, validated_at')
+      .eq('user_id', Astro.locals.user?.id);
+    validatedIds = getProgressIndex(rows ?? []);
+  } catch {
+    validatedIds = new Set();
+  }
 }
 
 const parts = await fetchStoriesByComponent('partie');

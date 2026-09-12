@@ -92,11 +92,15 @@ export async function fetchStoriesByComponent(component: string) {
 
 export async function fetchFormationIndex(): Promise<StoryblokStory[]> {
   const api = getStoryblokApi();
-  const { data } = await api.get('cdn/stories/parties/index-general', {
-    version: isPreview() ? 'draft' : 'published',
-    token: import.meta.env.STORYBLOK_TOKEN,
-    resolve_relations: 'index.parties_list,partie.modules,module.cours',
-  });
-  const story = data.story as StoryblokStory;
-  return (story.content as Record<string, unknown>).parties_list as StoryblokStory[];
+  try {
+    const { data } = await api.get('cdn/stories/parties/index-general', {
+      version: isPreview() ? 'draft' : 'published',
+      token: import.meta.env.STORYBLOK_TOKEN,
+      resolve_relations: 'index.parties_list,partie.modules,module.cours',
+    });
+    const story = data.story as StoryblokStory;
+    return (story.content as Record<string, unknown>).parties_list as StoryblokStory[];
+  } catch {
+    return [];
+  }
 }

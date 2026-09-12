@@ -73,7 +73,7 @@ export async function getInscription(
       .maybeSingle());
   }
 
-  if (error) throw error;
+  if (error) return null;
   if (!data) return null;
   return {
     upgrade: Boolean(data.upgrade),

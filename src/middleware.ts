@@ -20,9 +20,14 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   const supabase = createSupabaseServerClient(context);
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    user = null;
+  }
 
   context.locals.user = user;
   context.locals.inscription = null;
@@ -32,7 +37,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   if (user.email) {
-    context.locals.inscription = await getInscription(supabase, user.email);
+    try {
+      context.locals.inscription = await getInscription(supabase, user.email);
+    } catch {
+      context.locals.inscription = null;
+    }
   }
 
   return next();
