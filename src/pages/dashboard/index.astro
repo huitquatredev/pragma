@@ -15,11 +15,10 @@ const parts = await fetchFormationIndex();
 let validatedIds = new Set<string>();
 if (!isPreview) {
   const supabase = createSupabaseServerClient(Astro);
-  const { data: rows, error } = await supabase
+  const { data: rows } = await supabase
     .from('progress')
     .select('cours_id, validated_at')
     .eq('user_id', Astro.locals.user?.id);
-  if (error) throw error;
   validatedIds = getProgressIndex(rows ?? []);
 }
 
