@@ -20,6 +20,7 @@ declare global {
     interface Locals {
       user: import('@supabase/supabase-js').User | null;
       inscription: import('./lib/supabase').Inscription | null;
+      supabase: ReturnType<typeof import('./lib/supabase').createSupabaseServerClient> | null;
     }
   }
 }

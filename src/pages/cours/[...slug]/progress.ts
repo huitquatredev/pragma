@@ -1,5 +1,4 @@
 import type { APIRoute } from 'astro';
-import { createSupabaseServerClient } from '../../../lib/supabase';
 import { fetchStory } from '../../../lib/storyblok';
 import { hasCourseAccess } from '../../../lib/progress';
 
@@ -17,7 +16,8 @@ export const POST: APIRoute = async (context) => {
   if (inscription && !hasCourseAccess(story, inscription)) {
     return new Response('Accès non autorisé.', { status: 403 });
   }
-  const supabase = createSupabaseServerClient(context);
+  const supabase = context.locals.supabase;
+  if (!supabase) return context.redirect('/login');
   const result =
     action === 'validate'
       ? await supabase.from('progress').upsert({ user_id: user.id, cours_id: story.uuid })

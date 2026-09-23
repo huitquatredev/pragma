@@ -9,6 +9,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   if (isPreview) {
     context.locals.user = null;
     context.locals.inscription = null;
+    context.locals.supabase = null;
     return next();
   }
 
@@ -16,6 +17,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   if (!isProtected) {
     context.locals.user = null;
     context.locals.inscription = null;
+    context.locals.supabase = null;
     return next();
   }
 
@@ -31,6 +33,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   context.locals.user = user;
   context.locals.inscription = null;
+  context.locals.supabase = user ? supabase : null;
 
   if (!user) {
     return context.redirect(`/login?next=${encodeURIComponent(context.url.pathname)}`);
