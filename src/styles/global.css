@@ -339,6 +339,110 @@ a {
   font-weight: 700;
   margin: 0 0 0.5rem;
 }
+.partie-context,
+.module-context,
+.cours-context {
+  margin: 2rem 0 3.5rem;
+  border-top: 2px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+}
+.partie-context-enjeu,
+.module-context-lede,
+.cours-context-lede {
+  padding: 1.5rem 0 1.75rem;
+  border-bottom: 1px solid var(--line);
+}
+.partie-context-enjeu:last-child,
+.module-context-lede:last-child,
+.cours-context-lede:last-child {
+  border-bottom: 0;
+}
+.partie-context-grid,
+.module-context-grid,
+.cours-context-grid,
+.module-context-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 2.5rem;
+}
+.module-context-meta {
+  border-top: 1px solid var(--line);
+}
+.partie-context-block,
+.module-context-block,
+.cours-context-block {
+  padding: 1.5rem 0 1.75rem;
+  min-width: 0;
+}
+.partie-context-block + .partie-context-block,
+.cours-context-grid > .cours-context-block + .cours-context-block,
+.module-context-grid > .module-context-block + .module-context-block,
+.module-context-meta > .module-context-block + .module-context-block {
+  border-left: 1px solid var(--line);
+  padding-left: 2.5rem;
+}
+.module-context-block--meta {
+  padding: 1.25rem 0;
+}
+.partie-context .eyebrow,
+.module-context .eyebrow,
+.cours-context .eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.9rem;
+}
+.partie-context .eyebrow::before,
+.module-context .eyebrow::before,
+.cours-context .eyebrow::before {
+  content: '';
+  width: 0.55rem;
+  height: 0.55rem;
+  flex: none;
+  background: var(--ink);
+}
+.partie-context-enjeu .eyebrow::before,
+.module-context-lede .eyebrow::before,
+.cours-context-lede .eyebrow::before {
+  background: var(--accent);
+  border: 1px solid var(--ink);
+}
+.partie-context-rich,
+.module-context-rich,
+.cours-context-rich {
+  margin: 0;
+  max-width: none;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+.partie-context-rich--lede,
+.module-context-rich--lede,
+.cours-context-rich--lede {
+  font-size: clamp(1.25rem, 2.4vw, 1.6rem);
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  max-width: 60rem;
+}
+.module-context-meta:first-child,
+.module-context-lede + .module-context-meta {
+  border-top: 0;
+}
+@media (max-width: 700px) {
+  .partie-context-grid,
+  .module-context-grid,
+  .cours-context-grid,
+  .module-context-meta {
+    grid-template-columns: 1fr;
+  }
+  .partie-context-block + .partie-context-block,
+  .cours-context-grid > .cours-context-block + .cours-context-block,
+  .module-context-grid > .module-context-block + .module-context-block,
+  .module-context-meta > .module-context-block + .module-context-block {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    padding-left: 0;
+  }
+}
 .content-list {
   list-style: none;
   margin: 0;

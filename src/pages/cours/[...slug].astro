@@ -53,29 +53,103 @@ const coursIndex = parentModule
 const { fetchFormationIndex } = await import('../../lib/storyblok');
 const allParts = await fetchFormationIndex();
 const partNumber = allParts.findIndex((p) => p.uuid === parentPart?.uuid);
+
+const question = story.content.question;
+const temps = story.content.temps;
+const action = story.content.action;
+
+function hasRichText(doc: unknown): boolean {
+  if (!doc) return false;
+  if (typeof doc === 'string') return doc.trim().length > 0;
+  const node = doc as { content?: Array<{ content?: Array<{ text?: string }> }> };
+  if (!Array.isArray(node.content)) return true;
+  return node.content.some((block) =>
+    (block.content ?? []).some((inline) => (inline.text ?? '').trim().length > 0)
+  );
+}
+
+const hasContext = hasRichText(question) || hasRichText(temps) || hasRichText(action);
 ---
 
 <AppLayout title={`${story.content.title} — Pragma Formation`}>
   <main class="content-shell course-page">
     <p class="eyebrow">COURS</p><h1>{story.content.title}</h1>
-    <Breadcrumb items={[
-      ...(parentPart ? [{ label: parentPart.content.title, href: `/parties/${parentPart.slug}`, level: 'PARTIE', number: partNumber }] : []),
-      ...(parentModule ? [{ label: parentModule.content.title, href: `/modules/${parentModule.slug}`, level: 'MODULE', number: moduleIndex >= 0 ? moduleIndex + 1 : null }] : []),
-      { label: story.content.title },
-    ]} />
-    {(story.content.body as SectionText[] ?? []).map((section) => (
-      <div class="section-text">
-        {section.titre && <h2>{section.titre}</h2>}
-        {section.corps && (
-          <div class="rich-text">
-            <RichText document={section.corps} />
-          </div>
-        )}
-        {section.bouton_text && section.bouton_lien?.url && (
-          <a class="button" href={section.bouton_lien.url}>{section.bouton_text}</a>
-        )}
-      </div>
-    ))}
+    <Breadcrumb
+      items={[
+        ...(parentPart
+          ? [
+              {
+                label: parentPart.content.title,
+                href: `/parties/${parentPart.slug}`,
+                level: 'PARTIE',
+                number: partNumber,
+              },
+            ]
+          : []),
+        ...(parentModule
+          ? [
+              {
+                label: parentModule.content.title,
+                href: `/modules/${parentModule.slug}`,
+                level: 'MODULE',
+                number: moduleIndex >= 0 ? moduleIndex + 1 : null,
+              },
+            ]
+          : []),
+        { label: story.content.title },
+      ]}
+    />
+    {
+      hasContext && (
+        <section class="cours-context" aria-label="Contexte du cours">
+          {hasRichText(question) && (
+            <div class="cours-context-lede">
+              <p class="eyebrow">Question</p>
+              <div class="rich-text cours-context-rich cours-context-rich--lede">
+                <RichText document={question} />
+              </div>
+            </div>
+          )}
+          {(hasRichText(temps) || hasRichText(action)) && (
+            <div class="cours-context-grid">
+              {hasRichText(temps) && (
+                <div class="cours-context-block">
+                  <p class="eyebrow">Temps</p>
+                  <div class="rich-text cours-context-rich">
+                    <RichText document={temps} />
+                  </div>
+                </div>
+              )}
+              {hasRichText(action) && (
+                <div class="cours-context-block">
+                  <p class="eyebrow">Action</p>
+                  <div class="rich-text cours-context-rich">
+                    <RichText document={action} />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+      )
+    }
+    {
+      ((story.content.body as SectionText[]) ?? []).map((section) => (
+        <div class="section-text">
+          {section.titre && <h2>{section.titre}</h2>}
+          {section.corps && (
+            <div class="rich-text">
+              <RichText document={section.corps} />
+            </div>
+          )}
+          {section.bouton_text && section.bouton_lien?.url && (
+            <a class="button" href={section.bouton_lien.url}>
+              {section.bouton_text}
+            </a>
+          )}
+        </div>
+      ))
+    }
     <form method="post" action={`/cours/${story.slug}/progress`}>
       <input type="hidden" name="action" value={validated ? 'unvalidate' : 'validate'} /><button
         class="button"

@@ -33,28 +33,126 @@ const moduleIndex = parentPart
 const { fetchFormationIndex } = await import('../../lib/storyblok');
 const allParts = await fetchFormationIndex();
 const partNumber = allParts.findIndex((p) => p.uuid === parentPart?.uuid);
+
+const approche = story.content.approche;
+const resultat = story.content.resultat;
+const temps = story.content.temps;
+const outil = story.content.outil;
+const prerequis = story.content.prerequis;
+
+function hasRichText(doc: unknown): boolean {
+  if (!doc) return false;
+  if (typeof doc === 'string') return doc.trim().length > 0;
+  const node = doc as { content?: Array<{ content?: Array<{ text?: string }> }> };
+  if (!Array.isArray(node.content)) return true;
+  return node.content.some((block) =>
+    (block.content ?? []).some((inline) => (inline.text ?? '').trim().length > 0)
+  );
+}
+
+const hasContext =
+  hasRichText(approche) ||
+  hasRichText(resultat) ||
+  hasRichText(temps) ||
+  hasRichText(outil) ||
+  hasRichText(prerequis);
 ---
 
 <AppLayout title={`${story.content.title} — Pragma Formation`}>
   <main class="content-shell">
-    <p class="eyebrow">MODULE {moduleIndex >= 0 ? moduleIndex + 1 : ''}</p><h1>{story.content.title}</h1>
-    <Breadcrumb items={[
-      ...(parentPart ? [{ label: parentPart.content.title, href: `/parties/${parentPart.slug}`, level: 'PARTIE', number: partNumber }] : []),
-      { label: story.content.title, level: 'MODULE', number: moduleIndex >= 0 ? moduleIndex + 1 : null },
-    ]} />
-    {(story.content.body as SectionText[] ?? []).map((section) => (
-      <div class="section-text">
-        {section.titre && <h2>{section.titre}</h2>}
-        {section.corps && (
-          <div class="rich-text">
-            <RichText document={section.corps} />
-          </div>
-        )}
-        {section.bouton_text && section.bouton_lien?.url && (
-          <a class="button" href={section.bouton_lien.url}>{section.bouton_text}</a>
-        )}
-      </div>
-    ))}
+    <p class="eyebrow">MODULE {moduleIndex >= 0 ? moduleIndex + 1 : ''}</p><h1>
+      {story.content.title}
+    </h1>
+    <Breadcrumb
+      items={[
+        ...(parentPart
+          ? [
+              {
+                label: parentPart.content.title,
+                href: `/parties/${parentPart.slug}`,
+                level: 'PARTIE',
+                number: partNumber,
+              },
+            ]
+          : []),
+        {
+          label: story.content.title,
+          level: 'MODULE',
+          number: moduleIndex >= 0 ? moduleIndex + 1 : null,
+        },
+      ]}
+    />
+    {
+      hasContext && (
+        <section class="module-context" aria-label="Contexte du module">
+          {hasRichText(approche) && (
+            <div class="module-context-lede">
+              <p class="eyebrow">Approche</p>
+              <div class="rich-text module-context-rich module-context-rich--lede">
+                <RichText document={approche} />
+              </div>
+            </div>
+          )}
+          {(hasRichText(resultat) || hasRichText(prerequis)) && (
+            <div class="module-context-grid">
+              {hasRichText(resultat) && (
+                <div class="module-context-block">
+                  <p class="eyebrow">Résultat</p>
+                  <div class="rich-text module-context-rich">
+                    <RichText document={resultat} />
+                  </div>
+                </div>
+              )}
+              {hasRichText(prerequis) && (
+                <div class="module-context-block">
+                  <p class="eyebrow">Prérequis</p>
+                  <div class="rich-text module-context-rich">
+                    <RichText document={prerequis} />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          {(hasRichText(temps) || hasRichText(outil)) && (
+            <div class="module-context-meta">
+              {hasRichText(temps) && (
+                <div class="module-context-block module-context-block--meta">
+                  <p class="eyebrow">Temps</p>
+                  <div class="rich-text module-context-rich">
+                    <RichText document={temps} />
+                  </div>
+                </div>
+              )}
+              {hasRichText(outil) && (
+                <div class="module-context-block module-context-block--meta">
+                  <p class="eyebrow">Outil</p>
+                  <div class="rich-text module-context-rich">
+                    <RichText document={outil} />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+      )
+    }
+    {
+      ((story.content.body as SectionText[]) ?? []).map((section) => (
+        <div class="section-text">
+          {section.titre && <h2>{section.titre}</h2>}
+          {section.corps && (
+            <div class="rich-text">
+              <RichText document={section.corps} />
+            </div>
+          )}
+          {section.bouton_text && section.bouton_lien?.url && (
+            <a class="button" href={section.bouton_lien.url}>
+              {section.bouton_text}
+            </a>
+          )}
+        </div>
+      ))
+    }
     <ul class="content-list">
       {
         (story.content.cours ?? [])

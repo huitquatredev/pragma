@@ -30,42 +30,101 @@ if (!isPreview && Astro.locals.supabase) {
 const parties = await fetchFormationIndex();
 const partIndex = parties.findIndex((p) => p.uuid === story.uuid);
 const partNumber = partIndex >= 0 ? partIndex : null;
+
+const enjeu = story.content.enjeu;
+const objectifs = story.content.objectifs;
+const livrables = story.content.livrables;
+
+function hasRichText(doc: unknown): boolean {
+  if (!doc) return false;
+  if (typeof doc === 'string') return doc.trim().length > 0;
+  const node = doc as { content?: Array<{ content?: Array<{ text?: string }> }> };
+  if (!Array.isArray(node.content)) return true;
+  return node.content.some((block) =>
+    (block.content ?? []).some((inline) => (inline.text ?? '').trim().length > 0)
+  );
+}
+
+const hasContext = hasRichText(enjeu) || hasRichText(objectifs) || hasRichText(livrables);
 ---
 
 <AppLayout title={`${story.content.title} — Pragma Formation`}>
   <main class="content-shell">
-    <p class="eyebrow">PARTIE {partNumber != null ? `${partNumber}` : ''}</p><h1>{story.content.title}</h1>
+    <p class="eyebrow">PARTIE {partNumber != null ? `${partNumber}` : ''}</p><h1>
+      {story.content.title}
+    </h1>
     <Breadcrumb items={[{ label: story.content.title, level: 'PARTIE', number: partNumber }]} />
-    {(story.content.body as SectionText[] ?? []).map((section) => (
-      <div class="section-text">
-        {section.titre && <h2>{section.titre}</h2>}
-        {section.corps && (
-          <div class="rich-text">
-            <RichText document={section.corps} />
-          </div>
-        )}
-        {section.bouton_text && section.bouton_lien?.url && (
-          <a class="button" href={section.bouton_lien.url}>{section.bouton_text}</a>
-        )}
-      </div>
-    ))}
+    {
+      hasContext && (
+        <section class="partie-context" aria-label="Contexte de la partie">
+          {hasRichText(enjeu) && (
+            <div class="partie-context-enjeu">
+              <p class="eyebrow">Enjeu</p>
+              <div class="rich-text partie-context-rich partie-context-rich--lede">
+                <RichText document={enjeu} />
+              </div>
+            </div>
+          )}
+          {(hasRichText(objectifs) || hasRichText(livrables)) && (
+            <div class="partie-context-grid">
+              {hasRichText(objectifs) && (
+                <div class="partie-context-block">
+                  <p class="eyebrow">Objectifs</p>
+                  <div class="rich-text partie-context-rich">
+                    <RichText document={objectifs} />
+                  </div>
+                </div>
+              )}
+              {hasRichText(livrables) && (
+                <div class="partie-context-block">
+                  <p class="eyebrow">Livrables</p>
+                  <div class="rich-text partie-context-rich">
+                    <RichText document={livrables} />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+      )
+    }
+    {
+      ((story.content.body as SectionText[]) ?? []).map((section) => (
+        <div class="section-text">
+          {section.titre && <h2>{section.titre}</h2>}
+          {section.corps && (
+            <div class="rich-text">
+              <RichText document={section.corps} />
+            </div>
+          )}
+          {section.bouton_text && section.bouton_lien?.url && (
+            <a class="button" href={section.bouton_lien.url}>
+              {section.bouton_text}
+            </a>
+          )}
+        </div>
+      ))
+    }
     <ul class="content-list">
       {
-        inscription && (story.content.modules ?? []).map((module, moduleIndex) => {
-          const status = getModuleStatus(module, validatedIds, inscription);
-          return (
-            <li>
-              <a href={`/modules/${module.slug}`}>
-                <>
-                  <span>MODULE {moduleIndex + 1} — {module.content.title}</span>
-                  <span>
-                    {status.percentage}% <ProgressBadge validated={status.validated} />
-                  </span>
-                </>
-              </a>
-            </li>
-          );
-        })
+        inscription &&
+          (story.content.modules ?? []).map((module, moduleIndex) => {
+            const status = getModuleStatus(module, validatedIds, inscription);
+            return (
+              <li>
+                <a href={`/modules/${module.slug}`}>
+                  <>
+                    <span>
+                      MODULE {moduleIndex + 1} — {module.content.title}
+                    </span>
+                    <span>
+                      {status.percentage}% <ProgressBadge validated={status.validated} />
+                    </span>
+                  </>
+                </a>
+              </li>
+            );
+          })
       }
     </ul>
   </main>

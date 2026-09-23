@@ -11,6 +11,16 @@ export interface StoryblokStory {
     title?: string;
     titre?: string;
     body?: unknown;
+    enjeu?: unknown;
+    objectifs?: unknown;
+    livrables?: unknown;
+    approche?: unknown;
+    resultat?: unknown;
+    temps?: unknown;
+    outil?: unknown;
+    prerequis?: unknown;
+    question?: unknown;
+    action?: unknown;
     description?: string;
     robots?: string;
     schema?: unknown;
