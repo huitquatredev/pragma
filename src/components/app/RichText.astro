@@ -6,7 +6,13 @@ interface Props {
 }
 
 const { document } = Astro.props;
-const html = document ? richTextResolver().render(document as never) : '';
+const html = document
+  ? richTextResolver()
+      .render(document as never)
+      // The resolver emits alt="undefined" for nodes without alt text (e.g. emoji
+      // fallback images). Decorative images must not expose a literal "undefined".
+      .replaceAll('alt="undefined"', 'alt=""')
+  : '';
 ---
 
-{html && <div set:html={html} />}
+{html && <Fragment set:html={html} />}
