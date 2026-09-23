@@ -4,18 +4,17 @@ import Breadcrumb from '../../components/app/Breadcrumb.astro';
 import ProgressBadge from '../../components/app/ProgressBadge.astro';
 import RichText from '../../components/app/RichText.astro';
 import { fetchStory, fetchStoriesByComponent, type SectionText } from '../../lib/storyblok';
-import { createSupabaseServerClient, previewInscription } from '../../lib/supabase';
+import { previewInscription } from '../../lib/supabase';
 import { getProgressIndex, hasCourseAccess } from '../../lib/progress';
 
 const isPreview = process.env.IS_PREVIEW === 'true' || import.meta.env.IS_PREVIEW === 'true';
-const story = await fetchStory(Astro.params.slug!);
+const story = await fetchStory(`modules/${Astro.params.slug!}`);
 const inscription = isPreview ? previewInscription : Astro.locals.inscription;
 
 let validatedIds = new Set<string>();
-if (!isPreview) {
+if (!isPreview && Astro.locals.supabase) {
   try {
-    const supabase = createSupabaseServerClient(Astro);
-    const { data: rows } = await supabase
+    const { data: rows } = await Astro.locals.supabase
       .from('progress')
       .select('cours_id, validated_at')
       .eq('user_id', Astro.locals.user?.id);
@@ -26,9 +25,7 @@ if (!isPreview) {
 }
 
 const parts = await fetchStoriesByComponent('partie');
-const parentPart = parts.find((p) =>
-  (p.content.modules ?? []).some((m) => m.uuid === story.uuid)
-);
+const parentPart = parts.find((p) => (p.content.modules ?? []).some((m) => m.uuid === story.uuid));
 const moduleIndex = parentPart
   ? (parentPart.content.modules ?? []).findIndex((m) => m.uuid === story.uuid)
   : -1;

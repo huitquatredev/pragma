@@ -2,12 +2,12 @@
 import AppLayout from '../../layouts/AppLayout.astro';
 import Breadcrumb from '../../components/app/Breadcrumb.astro';
 import { fetchStory, fetchStoriesByComponent, type SectionText } from '../../lib/storyblok';
-import { createSupabaseServerClient, previewInscription } from '../../lib/supabase';
+import { previewInscription } from '../../lib/supabase';
 import { flattenCourses, getProgressIndex, hasCourseAccess } from '../../lib/progress';
 import RichText from '../../components/app/RichText.astro';
 
 const isPreview = process.env.IS_PREVIEW === 'true' || import.meta.env.IS_PREVIEW === 'true';
-const story = await fetchStory(Astro.params.slug!);
+const story = await fetchStory(`cours/${Astro.params.slug!}`);
 const inscription = isPreview ? previewInscription : Astro.locals.inscription;
 
 if (inscription && !hasCourseAccess(story, inscription)) {
@@ -15,10 +15,9 @@ if (inscription && !hasCourseAccess(story, inscription)) {
 }
 
 let validatedIds = new Set<string>();
-if (!isPreview) {
+if (!isPreview && Astro.locals.supabase) {
   try {
-    const supabase = createSupabaseServerClient(Astro);
-    const { data: rows } = await supabase
+    const { data: rows } = await Astro.locals.supabase
       .from('progress')
       .select('cours_id, validated_at')
       .eq('user_id', Astro.locals.user?.id);
@@ -36,18 +35,17 @@ const next = position >= 0 && position < courses.length - 1 ? courses[position +
 const validated = validatedIds.has(story.uuid);
 
 const parentPart = parts.find((p) =>
-  (p.content.modules ?? []).some((m) =>
-    (m.content.cours ?? []).some((c) => c.uuid === story.uuid)
-  )
+  (p.content.modules ?? []).some((m) => (m.content.cours ?? []).some((c) => c.uuid === story.uuid))
 );
 const parentModule = parentPart
   ? (parentPart.content.modules ?? []).find((m) =>
       (m.content.cours ?? []).some((c) => c.uuid === story.uuid)
     )
   : null;
-const moduleIndex = parentPart && parentModule
-  ? (parentPart.content.modules ?? []).findIndex((m) => m.uuid === parentModule.uuid)
-  : -1;
+const moduleIndex =
+  parentPart && parentModule
+    ? (parentPart.content.modules ?? []).findIndex((m) => m.uuid === parentModule.uuid)
+    : -1;
 const coursIndex = parentModule
   ? (parentModule.content.cours ?? []).findIndex((c) => c.uuid === story.uuid)
   : -1;

@@ -39,9 +39,7 @@ export function getStoryblokApi() {
 export async function fetchStory(slug: string) {
   const api = getStoryblokApi();
   const opts = {
-    version: (isPreview() ? 'draft' : 'published') as
-      | 'draft'
-      | 'published',
+    version: (isPreview() ? 'draft' : 'published') as 'draft' | 'published',
     token: import.meta.env.STORYBLOK_TOKEN,
     resolve_relations: 'partie.modules,module.cours',
   };
@@ -96,10 +94,11 @@ export async function fetchFormationIndex(): Promise<StoryblokStory[]> {
     const { data } = await api.get('cdn/stories/parties/index-general', {
       version: isPreview() ? 'draft' : 'published',
       token: import.meta.env.STORYBLOK_TOKEN,
-      resolve_relations: 'index.parties_list,partie.modules,module.cours',
+      resolve_relations: 'index.parties_list',
     });
     const story = data.story as StoryblokStory;
-    return (story.content as Record<string, unknown>).parties_list as StoryblokStory[];
+    const refs = (story.content as Record<string, unknown>).parties_list as StoryblokStory[];
+    return Promise.all(refs.map((ref) => fetchStory(ref.slug).catch(() => ref)));
   } catch {
     return [];
   }
