@@ -34,18 +34,7 @@ const { parts, validatedIds, inscription } = Astro.props;
                     <span>
                       {status.percentage}% <ProgressBadge validated={status.validated} />
                     </span>
-                     <ul>
-                      {(module.content.cours ?? [])
-                        .filter((c) => c.content)
-                        .filter((c) => !c.content.upgrade || inscription.upgrade)
-                        .filter((c) => !c.content.option_camille || inscription.camille)
-                        .map((course) => (
-                          <li>
-                            <a href={`/cours/${course.slug}`}>{course.content.title}</a>
-                            <ProgressBadge validated={validatedIds.has(course.uuid)} />
-                          </li>
-                        ))}
-                    </ul>
+
                   </li>
                 );
               })}
