@@ -45,10 +45,12 @@ export function getPartStatus(
 ): ProgressStatus {
   const modules = part.content.modules ?? [];
   const statuses = modules.map((module) => getModuleStatus(module, validatedIds, inscription));
-  const validated = statuses.filter((status) => status.validated).length;
+  const allValidated = statuses.length > 0 && statuses.every((s) => s.validated);
+  const allCourses = flattenCourses([part], inscription);
+  const validatedCourses = allCourses.filter((c) => validatedIds.has(c.uuid)).length;
   return {
-    validated: modules.length > 0 && validated === modules.length,
-    percentage: modules.length ? Math.round((validated / modules.length) * 100) : 0,
+    validated: allValidated,
+    percentage: allCourses.length ? Math.round((validatedCourses / allCourses.length) * 100) : 0,
   };
 }
 
