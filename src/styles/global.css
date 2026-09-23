@@ -272,6 +272,23 @@ a {
   margin-top: 0.2em;
   margin-bottom: 0;
 }
+.rich-text > * + ul,
+.rich-text > * + ol {
+  margin-top: 1.2em;
+}
+.rich-text > ul:not(:last-child),
+.rich-text > ol:not(:last-child) {
+  margin-bottom: 1.6em;
+}
+.rich-text > p + ul,
+.rich-text > p + ol {
+  margin-top: 0.6em;
+}
+.rich-text [data-type='emoji'] img {
+  width: 1em !important;
+  height: 1em !important;
+  vertical-align: -0.125em !important;
+}
 .rich-text blockquote {
   border-left: 3px solid var(--ink);
   padding-left: 1.2em;
