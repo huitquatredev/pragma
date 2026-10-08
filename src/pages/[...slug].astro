@@ -44,11 +44,18 @@ let story: StoryblokStory | undefined;
 
 if (isPreview) {
   // SSR mode: fetch on-demand for Storyblok visual editor
-  const { data } = await storyblokApi.get(`cdn/stories/${slug || 'home'}`, {
-    version: 'draft',
-    token: import.meta.env.STORYBLOK_TOKEN,
-  });
-  story = data.story;
+  try {
+    const { data } = await storyblokApi.get(`cdn/stories/${slug || 'home'}`, {
+      version: 'draft',
+      token: import.meta.env.STORYBLOK_TOKEN,
+    });
+    story = data.story;
+  } catch {
+    return new Response(null, {
+      status: 404,
+      statusText: 'Not found',
+    });
+  }
 } else {
   // SSG mode: story comes from getStaticPaths props
   story = staticStory;

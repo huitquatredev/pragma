@@ -3,15 +3,25 @@ import AppLayout from '../../layouts/AppLayout.astro';
 import Breadcrumb from '../../components/app/Breadcrumb.astro';
 import ProgressBadge from '../../components/app/ProgressBadge.astro';
 import RichText from '../../components/app/RichText.astro';
-import { fetchStory, fetchFormationIndex, type SectionText } from '../../lib/storyblok';
+import { cleanRichText } from '../../lib/richtext';
+import BlocComprendre from '../../components/storyblok/BlocComprendre.astro';
+import BlocQuiz from '../../components/storyblok/BlocQuiz.astro';
+import BlocGuide from '../../components/storyblok/BlocGuide.astro';
+import BlocAction from '../../components/storyblok/BlocAction.astro';
+import { fetchStory, fetchFormationIndex, type CoursBlok, type SectionText } from '../../lib/storyblok';
 import { previewInscription } from '../../lib/supabase';
-import { getModuleStatus, getProgressIndex } from '../../lib/progress';
+import { getModuleStatus, getProgressIndex, hasCourseAccess } from '../../lib/progress';
 
 const isPreview = process.env.IS_PREVIEW === 'true' || import.meta.env.IS_PREVIEW === 'true';
 if (Astro.params.slug === 'index-general') {
   return new Response(null, { status: 404, statusText: 'Not found' });
 }
-const story = await fetchStory(`parties/${Astro.params.slug!}`);
+const story = await fetchStory(`parties/${Astro.params.slug!}`).catch(
+  () => null
+);
+if (!story) {
+  return new Response(null, { status: 404, statusText: 'Not found' });
+}
 const inscription = isPreview ? previewInscription : Astro.locals.inscription;
 
 let validatedIds = new Set<string>();
@@ -34,6 +44,8 @@ const partNumber = partIndex >= 0 ? partIndex : null;
 const enjeu = story.content.enjeu;
 const objectifs = story.content.objectifs;
 const livrables = story.content.livrables;
+const directCours = story.content.cours ?? [];
+const hasModules = (story.content.modules ?? []).length > 0;
 
 function hasRichText(doc: unknown): boolean {
   if (!doc) return false;
@@ -61,7 +73,7 @@ const hasContext = hasRichText(enjeu) || hasRichText(objectifs) || hasRichText(l
             <div class="partie-context-enjeu">
               <p class="eyebrow">Enjeu</p>
               <div class="rich-text partie-context-rich partie-context-rich--lede">
-                <RichText document={enjeu} />
+                <RichText document={cleanRichText(enjeu)} />
               </div>
             </div>
           )}
@@ -71,7 +83,7 @@ const hasContext = hasRichText(enjeu) || hasRichText(objectifs) || hasRichText(l
                 <div class="partie-context-block">
                   <p class="eyebrow">Objectifs</p>
                   <div class="rich-text partie-context-rich">
-                    <RichText document={objectifs} />
+                    <RichText document={cleanRichText(objectifs)} />
                   </div>
                 </div>
               )}
@@ -79,7 +91,7 @@ const hasContext = hasRichText(enjeu) || hasRichText(objectifs) || hasRichText(l
                 <div class="partie-context-block">
                   <p class="eyebrow">Livrables</p>
                   <div class="rich-text partie-context-rich">
-                    <RichText document={livrables} />
+                    <RichText document={cleanRichText(livrables)} />
                   </div>
                 </div>
               )}
@@ -89,26 +101,52 @@ const hasContext = hasRichText(enjeu) || hasRichText(objectifs) || hasRichText(l
       )
     }
     {
-      ((story.content.body as SectionText[]) ?? []).map((section) => (
-        <div class="section-text">
-          {section.titre && <h2>{section.titre}</h2>}
-          {section.corps && (
-            <div class="rich-text">
-              <RichText document={section.corps} />
-            </div>
-          )}
-          {section.bouton_text && section.bouton_lien?.url && (
-            <a class="button" href={section.bouton_lien.url}>
-              {section.bouton_text}
-            </a>
-          )}
-        </div>
-      ))
+      ((story.content.body as CoursBlok[]) ?? []).map((section) => {
+        if (section.component === 'bloc_comprendre') return <BlocComprendre blok={section} />;
+        if (section.component === 'bloc_quiz') return <BlocQuiz blok={section} />;
+        if (section.component === 'bloc_guide') return <BlocGuide blok={section} />;
+        if (section.component === 'bloc_action') return <BlocAction blok={section} />;
+        const legacy = section as SectionText;
+        return (
+          <div class="section-text">
+            {legacy.titre && <h2>{legacy.titre}</h2>}
+            {legacy.corps && (
+              <div class="rich-text">
+                <RichText document={legacy.corps} />
+              </div>
+            )}
+            {legacy.bouton_text && legacy.bouton_lien?.url && (
+              <a class="button" href={legacy.bouton_lien.url}>
+                {legacy.bouton_text}
+              </a>
+            )}
+          </div>
+        );
+      })
     }
+    {!hasModules && directCours.length > 0 && (
+      <ul class="content-list">
+        {directCours
+          .filter((c) => c.content)
+          .filter((c) => !inscription || hasCourseAccess(c, inscription))
+          .map((course) => (
+            <li>
+              <a href={`/cours/${course.slug}`}>
+                <>
+                  <span>{course.content.title}</span>
+                  <ProgressBadge validated={validatedIds.has(course.uuid)} />
+                </>
+              </a>
+            </li>
+          ))}
+      </ul>
+    )}
     <ul class="content-list">
       {
         inscription &&
-          (story.content.modules ?? []).map((module, moduleIndex) => {
+          (story.content.modules ?? [])
+            .filter((module) => module && typeof module === 'object' && module.content)
+            .map((module, moduleIndex) => {
             const status = getModuleStatus(module, validatedIds, inscription);
             return (
               <li>

@@ -1,0 +1,84 @@
+---
+import RichText from '../app/RichText.astro';
+
+interface Props {
+  blok: {
+    _uid?: string;
+    titre?: string;
+    question?: string;
+    option_a?: string;
+    option_b?: string;
+    option_c?: string;
+    bonne_reponse?: string;
+    explication?: unknown;
+  };
+}
+
+const { blok } = Astro.props;
+const uid = (blok._uid ?? Math.random().toString(36).slice(2)).replace(/[^a-zA-Z0-9]/g, '');
+const bonne = (blok.bonne_reponse ?? 'C').toUpperCase();
+const options = [
+  { lettre: 'A', texte: blok.option_a },
+  { lettre: 'B', texte: blok.option_b },
+  { lettre: 'C', texte: blok.option_c },
+].filter((o) => (o.texte ?? '').trim().length > 0);
+---
+
+<div class="section-text bloc-quiz" data-quiz={uid} data-bonne={bonne}>
+  <h2>{blok.titre || 'Évaluation Flash'}</h2>
+  {blok.question && <p class="quiz-question"><strong>{blok.question}</strong></p>}
+  <div class="quiz-options" role="radiogroup" aria-label="Choix de réponse">
+    {options.map((o) => (
+      <label class="quiz-option">
+        <input type="radio" name={`quiz-${uid}`} value={o.lettre} />
+        <span><strong>{o.lettre}.</strong> {o.texte}</span>
+      </label>
+    ))}
+  </div>
+  <button type="button" class="button quiz-check" data-quiz-check={uid}>Vérifier</button>
+  <p class="quiz-feedback" data-quiz-feedback={uid} aria-live="polite" hidden></p>
+  {blok.explication && (
+    <div class="rich-text quiz-explication" data-quiz-explication={uid} hidden>
+      <RichText document={blok.explication} />
+    </div>
+  )}
+</div>
+
+<script define:vars={{ uid }}>
+  (() => {
+    const root = document.querySelector(`[data-quiz="${uid}"]`);
+    if (!root || root.dataset.bound) return;
+    root.dataset.bound = 'true';
+    const btn = root.querySelector('[data-quiz-check]');
+    const feedback = root.querySelector('[data-quiz-feedback]');
+    const expl = root.querySelector('[data-quiz-explication]');
+    btn?.addEventListener('click', () => {
+      const checked = root.querySelector('input[type="radio"]:checked');
+      const bonne = (root.getAttribute('data-bonne') || 'C').toUpperCase();
+      if (!checked) {
+        if (feedback) {
+          feedback.hidden = false;
+          feedback.textContent = 'Choisis une réponse (A, B ou C) puis clique sur Vérifier.';
+        }
+        return;
+      }
+      const val = String(checked.value).toUpperCase();
+      const ok = val === bonne;
+      if (feedback) {
+        feedback.hidden = false;
+        feedback.textContent = ok
+          ? `Bravo, c'est la bonne réponse (${bonne}) !`
+          : `Pas tout à fait — tu as choisi ${val}, la bonne réponse est ${bonne}. Lis la correction ci-dessous.`;
+        feedback.dataset.state = ok ? 'ok' : 'ko';
+      }
+      if (expl) expl.hidden = false;
+    });
+  })();
+</script>
+
+<style>
+  .quiz-options { display: grid; gap: 0.5rem; margin: 0.75rem 0; }
+  .quiz-option { display: flex; gap: 0.5rem; align-items: flex-start; cursor: pointer; }
+  .quiz-feedback[data-state='ok'] { font-weight: 700; }
+  .quiz-feedback[data-state='ko'] { font-weight: 700; }
+</style>

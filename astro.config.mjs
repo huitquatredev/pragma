@@ -35,6 +35,10 @@ export default defineConfig({
       accessToken: STORYBLOK_TOKEN,
       components: {
         page: 'components/storyblok/Page',
+        bloc_comprendre: 'components/storyblok/BlocComprendre',
+        bloc_quiz: 'components/storyblok/BlocQuiz',
+        bloc_guide: 'components/storyblok/BlocGuide',
+        bloc_action: 'components/storyblok/BlocAction',
       },
       enableFallbackComponent: true,
       customFallbackComponent: 'components/storyblok/StoryblokFallback',

@@ -1,0 +1,47 @@
+---
+import RichText from '../app/RichText.astro';
+
+interface Props {
+  blok: {
+    titre?: string;
+    intro?: unknown;
+    exemple_lea?: unknown;
+    exemple_thomas?: unknown;
+  };
+}
+
+const { blok } = Astro.props;
+
+function hasDoc(doc: unknown): boolean {
+  if (!doc) return false;
+  const node = doc as { content?: Array<{ content?: Array<{ text?: string }> }> };
+  if (!Array.isArray(node.content)) return true;
+  return node.content.some((b) => (b.content ?? []).some((i) => (i.text ?? '').trim().length > 0));
+}
+---
+<div class="section-text bloc-guide">
+  <h2>{blok.titre || 'Guide pas à pas'}</h2>
+  {hasDoc(blok.intro) && (
+    <div class="rich-text">
+      <RichText document={blok.intro} />
+    </div>
+  )}
+  <div class="guide-grid">
+    {hasDoc(blok.exemple_lea) && (
+      <div class="guide-case">
+        <h3>Le cas de Léa <span class="guide-hint">(service / B2B)</span></h3>
+        <div class="rich-text">
+          <RichText document={blok.exemple_lea} />
+        </div>
+      </div>
+    )}
+    {hasDoc(blok.exemple_thomas) && (
+      <div class="guide-case">
+        <h3>Le cas de Thomas <span class="guide-hint">(produit / B2C)</span></h3>
+        <div class="rich-text">
+          <RichText document={blok.exemple_thomas} />
+        </div>
+      </div>
+    )}
+  </div>
+</div>

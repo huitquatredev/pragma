@@ -25,12 +25,20 @@ export function getProgressIndex(rows: ProgressRow[]) {
   return new Set(rows.map((row) => row.cours_id));
 }
 
+export function partCourses(part: StoryblokStory, inscription: Inscription) {
+  const fromModules = (part.content.modules ?? []).flatMap(
+    (module) => module.content?.cours ?? []
+  );
+  const direct = part.content.cours ?? [];
+  return accessibleCourses([...fromModules, ...direct], inscription);
+}
+
 export function getModuleStatus(
   module: StoryblokStory,
   validatedIds: Set<string>,
   inscription: Inscription
 ): ProgressStatus {
-  const courses = accessibleCourses(module.content.cours ?? [], inscription);
+  const courses = accessibleCourses(module.content?.cours ?? [], inscription);
   const validated = courses.filter((course) => validatedIds.has(course.uuid)).length;
   return {
     validated: courses.length > 0 && validated === courses.length,
@@ -45,9 +53,13 @@ export function getPartStatus(
 ): ProgressStatus {
   const modules = part.content.modules ?? [];
   const statuses = modules.map((module) => getModuleStatus(module, validatedIds, inscription));
-  const allValidated = statuses.length > 0 && statuses.every((s) => s.validated);
   const allCourses = flattenCourses([part], inscription);
   const validatedCourses = allCourses.filter((c) => validatedIds.has(c.uuid)).length;
+  // Parties sans module : la validation se joue directement sur les cours rattachés
+  const allValidated =
+    statuses.length > 0
+      ? statuses.every((s) => s.validated)
+      : allCourses.length > 0 && validatedCourses === allCourses.length;
   return {
     validated: allValidated,
     percentage: allCourses.length ? Math.round((validatedCourses / allCourses.length) * 100) : 0,
@@ -60,19 +72,13 @@ export function getFirstIncompleteCourse(
   inscription: Inscription
 ) {
   for (const part of parts) {
-    for (const module of part.content.modules ?? []) {
-      for (const course of accessibleCourses(module.content.cours ?? [], inscription)) {
-        if (!validatedIds.has(course.uuid)) return course;
-      }
+    for (const course of partCourses(part, inscription)) {
+      if (!validatedIds.has(course.uuid)) return course;
     }
   }
   return null;
 }
 
 export function flattenCourses(stories: StoryblokStory[], inscription: Inscription) {
-  return stories.flatMap((part) =>
-    (part.content.modules ?? []).flatMap((module) =>
-      accessibleCourses(module.content.cours ?? [], inscription)
-    )
-  );
+  return stories.flatMap((part) => partCourses(part, inscription));
 }

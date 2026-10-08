@@ -12,6 +12,7 @@ export interface StoryblokStory {
     titre?: string;
     body?: unknown;
     enjeu?: unknown;
+    competence?: string;
     objectifs?: unknown;
     livrables?: unknown;
     approche?: unknown;
@@ -42,6 +43,22 @@ export interface SectionText {
   bouton_lien?: { url: string; linktype?: string };
 }
 
+export type CoursBlok =
+  | SectionText
+  | { component: 'bloc_comprendre'; titre?: string; corps?: unknown }
+  | {
+      component: 'bloc_quiz';
+      titre?: string;
+      question?: string;
+      option_a?: string;
+      option_b?: string;
+      option_c?: string;
+      bonne_reponse?: string;
+      explication?: unknown;
+    }
+  | { component: 'bloc_guide'; titre?: string; intro?: unknown; exemple_lea?: unknown; exemple_thomas?: unknown }
+  | { component: 'bloc_action'; titre?: string; consignes?: unknown; outil_onglet?: string };
+
 export function getStoryblokApi() {
   return useStoryblokApi();
 }
@@ -51,7 +68,7 @@ export async function fetchStory(slug: string) {
   const opts = {
     version: (isPreview() ? 'draft' : 'published') as 'draft' | 'published',
     token: import.meta.env.STORYBLOK_TOKEN,
-    resolve_relations: 'partie.modules,module.cours',
+    resolve_relations: 'partie.modules,partie.cours,module.cours',
   };
 
   // Try direct path first (works when slug matches full_slug)
@@ -93,7 +110,7 @@ export async function fetchStoriesByComponent(component: string) {
     version: isPreview() ? 'draft' : 'published',
     token: import.meta.env.STORYBLOK_TOKEN,
     filter_query: { component: { in: component } },
-    resolve_relations: 'partie.modules,module.cours',
+    resolve_relations: 'partie.modules,partie.cours,module.cours',
   });
   return data.stories as StoryblokStory[];
 }
@@ -107,8 +124,20 @@ export async function fetchFormationIndex(): Promise<StoryblokStory[]> {
       resolve_relations: 'index.parties_list',
     });
     const story = data.story as StoryblokStory;
-    const refs = (story.content as Record<string, unknown>).parties_list as StoryblokStory[];
-    return Promise.all(refs.map((ref) => fetchStory(ref.slug).catch(() => ref)));
+    const refs = (story.content as Record<string, unknown>).parties_list as Array<
+      StoryblokStory | string
+    >;
+    // Re-fetch par full_slug pour obtenir les relations résolues
+    // (l'endpoint liste ne fusionne pas les `rels`).
+    const resolved = await Promise.all(
+      refs.map((ref) => {
+        if (typeof ref === 'string') return Promise.resolve(null);
+        const fullSlug = ref.full_slug || (ref.slug ? `parties/${ref.slug}` : null);
+        if (!fullSlug) return Promise.resolve(null);
+        return fetchStory(fullSlug).catch(() => null);
+      })
+    );
+    return resolved.filter((s): s is StoryblokStory => !!s && !!s.content);
   } catch {
     return [];
   }

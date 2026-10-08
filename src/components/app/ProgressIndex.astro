@@ -26,18 +26,30 @@ const { parts, validatedIds, inscription } = Astro.props;
           </a>
           {!partStatus.validated && (
             <ul>
-              {(part.content.modules ?? []).map((module) => {
-                const status = getModuleStatus(module, validatedIds, inscription);
-                return (
-                  <li>
-                    <a href={`/modules/${module.slug}`}>{module.content.title}</a>
-                    <span>
-                      {status.percentage}% <ProgressBadge validated={status.validated} />
-                    </span>
-
-                  </li>
-                );
-              })}
+              {(part.content.modules ?? [])
+                .filter((module) => module && typeof module === 'object' && module.content)
+                .map((module) => {
+                  const status = getModuleStatus(module, validatedIds, inscription);
+                  return (
+                    <li>
+                      <a href={`/modules/${module.slug}`}>{module.content.title}</a>
+                      <span>
+                        {status.percentage}% <ProgressBadge validated={status.validated} />
+                      </span>
+                    </li>
+                  );
+                })}
+              {(part.content.modules ?? []).length === 0 &&
+                (part.content.cours ?? [])
+                  .filter((course) => course && typeof course === 'object' && course.content)
+                  .map((course) => (
+                    <li>
+                      <a href={`/cours/${course.slug}`}>{course.content.title}</a>
+                      <span>
+                        <ProgressBadge validated={validatedIds.has(course.uuid)} />
+                      </span>
+                    </li>
+                  ))}
             </ul>
           )}
         </div>

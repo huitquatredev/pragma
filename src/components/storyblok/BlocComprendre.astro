@@ -1,0 +1,21 @@
+---
+import RichText from '../app/RichText.astro';
+import { cleanRichText } from '../../lib/richtext';
+
+interface Props {
+  blok: {
+    titre?: string;
+    corps?: unknown;
+  };
+}
+
+const { blok } = Astro.props;
+---
+<div class="section-text bloc-comprendre">
+  <h2>{blok.titre || "Ce qu'il faut comprendre"}</h2>
+  {blok.corps && (
+    <div class="rich-text">
+      <RichText document={cleanRichText(blok.corps)} />
+    </div>
+  )}
+</div>

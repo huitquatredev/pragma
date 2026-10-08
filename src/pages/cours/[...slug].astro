@@ -1,13 +1,23 @@
 ---
 import AppLayout from '../../layouts/AppLayout.astro';
 import Breadcrumb from '../../components/app/Breadcrumb.astro';
-import { fetchStory, fetchStoriesByComponent, type SectionText } from '../../lib/storyblok';
+import { fetchStory, fetchStoriesByComponent, type SectionText, type CoursBlok } from '../../lib/storyblok';
 import { previewInscription } from '../../lib/supabase';
 import { flattenCourses, getProgressIndex, hasCourseAccess } from '../../lib/progress';
 import RichText from '../../components/app/RichText.astro';
+import { cleanRichText } from '../../lib/richtext';
+import BlocComprendre from '../../components/storyblok/BlocComprendre.astro';
+import BlocQuiz from '../../components/storyblok/BlocQuiz.astro';
+import BlocGuide from '../../components/storyblok/BlocGuide.astro';
+import BlocAction from '../../components/storyblok/BlocAction.astro';
 
 const isPreview = process.env.IS_PREVIEW === 'true' || import.meta.env.IS_PREVIEW === 'true';
-const story = await fetchStory(`cours/${Astro.params.slug!}`);
+const story = await fetchStory(`cours/${Astro.params.slug!}`).catch(
+  () => null
+);
+if (!story) {
+  return new Response(null, { status: 404, statusText: 'Not found' });
+}
 const inscription = isPreview ? previewInscription : Astro.locals.inscription;
 
 if (inscription && !hasCourseAccess(story, inscription)) {
@@ -34,12 +44,14 @@ const previous = position > 0 ? courses[position - 1] : null;
 const next = position >= 0 && position < courses.length - 1 ? courses[position + 1] : null;
 const validated = validatedIds.has(story.uuid);
 
-const parentPart = parts.find((p) =>
-  (p.content.modules ?? []).some((m) => (m.content.cours ?? []).some((c) => c.uuid === story.uuid))
+const parentPart = parts.find(
+  (p) =>
+    (p.content.modules ?? []).some((m) => (m.content?.cours ?? []).some((c) => c.uuid === story.uuid)) ||
+    (p.content.cours ?? []).some((c) => c.uuid === story.uuid)
 );
 const parentModule = parentPart
   ? (parentPart.content.modules ?? []).find((m) =>
-      (m.content.cours ?? []).some((c) => c.uuid === story.uuid)
+      (m.content?.cours ?? []).some((c) => c.uuid === story.uuid)
     )
   : null;
 const moduleIndex =
@@ -54,9 +66,8 @@ const { fetchFormationIndex } = await import('../../lib/storyblok');
 const allParts = await fetchFormationIndex();
 const partNumber = allParts.findIndex((p) => p.uuid === parentPart?.uuid);
 
-const question = story.content.question;
-const temps = story.content.temps;
-const action = story.content.action;
+const competence = (story.content as { competence?: string }).competence;
+const enjeuCours = (story.content as { enjeu?: unknown }).enjeu;
 
 function hasRichText(doc: unknown): boolean {
   if (!doc) return false;
@@ -68,7 +79,8 @@ function hasRichText(doc: unknown): boolean {
   );
 }
 
-const hasContext = hasRichText(question) || hasRichText(temps) || hasRichText(action);
+const hasCompetence = typeof competence === 'string' && competence.trim().length > 0;
+const cleanEnjeu = cleanRichText(enjeuCours);
 ---
 
 <AppLayout title={`${story.content.title} — Pragma Formation`}>
@@ -99,56 +111,45 @@ const hasContext = hasRichText(question) || hasRichText(temps) || hasRichText(ac
         { label: story.content.title },
       ]}
     />
-    {
-      hasContext && (
-        <section class="cours-context" aria-label="Contexte du cours">
-          {hasRichText(question) && (
-            <div class="cours-context-lede">
-              <p class="eyebrow">Question</p>
-              <div class="rich-text cours-context-rich cours-context-rich--lede">
-                <RichText document={question} />
-              </div>
-            </div>
-          )}
-          {(hasRichText(temps) || hasRichText(action)) && (
-            <div class="cours-context-grid">
-              {hasRichText(temps) && (
-                <div class="cours-context-block">
-                  <p class="eyebrow">Temps</p>
-                  <div class="rich-text cours-context-rich">
-                    <RichText document={temps} />
-                  </div>
-                </div>
-              )}
-              {hasRichText(action) && (
-                <div class="cours-context-block">
-                  <p class="eyebrow">Action</p>
-                  <div class="rich-text cours-context-rich">
-                    <RichText document={action} />
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </section>
-      )
-    }
-    {
-      ((story.content.body as SectionText[]) ?? []).map((section) => (
-        <div class="section-text">
-          {section.titre && <h2>{section.titre}</h2>}
-          {section.corps && (
-            <div class="rich-text">
-              <RichText document={section.corps} />
-            </div>
-          )}
-          {section.bouton_text && section.bouton_lien?.url && (
-            <a class="button" href={section.bouton_lien.url}>
-              {section.bouton_text}
-            </a>
-          )}
+    {hasCompetence && (
+      <div class="section-text">
+        <h2>Compétence clé</h2>
+        <div class="rich-text">
+          <p>{competence}</p>
         </div>
-      ))
+      </div>
+    )}
+    {hasRichText(cleanEnjeu) && (
+      <div class="section-text">
+        <h2>Enjeu</h2>
+        <div class="rich-text">
+          <RichText document={cleanEnjeu} />
+        </div>
+      </div>
+    )}
+    {
+      ((story.content.body as CoursBlok[]) ?? []).map((section) => {
+        if (section.component === 'bloc_comprendre') return <BlocComprendre blok={section} />;
+        if (section.component === 'bloc_quiz') return <BlocQuiz blok={section} />;
+        if (section.component === 'bloc_guide') return <BlocGuide blok={section} />;
+        if (section.component === 'bloc_action') return <BlocAction blok={section} />;
+        const legacy = section as SectionText;
+        return (
+          <div class="section-text">
+            {legacy.titre && <h2>{legacy.titre}</h2>}
+            {legacy.corps && (
+              <div class="rich-text">
+                <RichText document={legacy.corps} />
+              </div>
+            )}
+            {legacy.bouton_text && legacy.bouton_lien?.url && (
+              <a class="button" href={legacy.bouton_lien.url}>
+                {legacy.bouton_text}
+              </a>
+            )}
+          </div>
+        );
+      })
     }
     <form method="post" action={`/cours/${story.slug}/progress`}>
       <input type="hidden" name="action" value={validated ? 'unvalidate' : 'validate'} /><button
