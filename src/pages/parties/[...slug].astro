@@ -3,7 +3,7 @@ import AppLayout from '../../layouts/AppLayout.astro';
 import Breadcrumb from '../../components/app/Breadcrumb.astro';
 import ProgressBadge from '../../components/app/ProgressBadge.astro';
 import RichText from '../../components/app/RichText.astro';
-import { cleanRichText } from '../../lib/richtext';
+import { cleanRichText, hasRichText } from '../../lib/richtext';
 import BlocComprendre from '../../components/storyblok/BlocComprendre.astro';
 import BlocQuiz from '../../components/storyblok/BlocQuiz.astro';
 import BlocGuide from '../../components/storyblok/BlocGuide.astro';
@@ -41,21 +41,11 @@ const parties = await fetchFormationIndex();
 const partIndex = parties.findIndex((p) => p.uuid === story.uuid);
 const partNumber = partIndex >= 0 ? partIndex : null;
 
-const enjeu = story.content.enjeu;
-const objectifs = story.content.objectifs;
-const livrables = story.content.livrables;
+const enjeu = cleanRichText(story.content.enjeu);
+const objectifs = cleanRichText(story.content.objectifs);
+const livrables = cleanRichText(story.content.livrables);
 const directCours = story.content.cours ?? [];
 const hasModules = (story.content.modules ?? []).length > 0;
-
-function hasRichText(doc: unknown): boolean {
-  if (!doc) return false;
-  if (typeof doc === 'string') return doc.trim().length > 0;
-  const node = doc as { content?: Array<{ content?: Array<{ text?: string }> }> };
-  if (!Array.isArray(node.content)) return true;
-  return node.content.some((block) =>
-    (block.content ?? []).some((inline) => (inline.text ?? '').trim().length > 0)
-  );
-}
 
 const hasContext = hasRichText(enjeu) || hasRichText(objectifs) || hasRichText(livrables);
 ---
@@ -73,7 +63,7 @@ const hasContext = hasRichText(enjeu) || hasRichText(objectifs) || hasRichText(l
             <div class="partie-context-enjeu">
               <p class="eyebrow">Enjeu</p>
               <div class="rich-text partie-context-rich partie-context-rich--lede">
-                <RichText document={cleanRichText(enjeu)} />
+                <RichText document={enjeu} />
               </div>
             </div>
           )}
@@ -83,7 +73,7 @@ const hasContext = hasRichText(enjeu) || hasRichText(objectifs) || hasRichText(l
                 <div class="partie-context-block">
                   <p class="eyebrow">Objectifs</p>
                   <div class="rich-text partie-context-rich">
-                    <RichText document={cleanRichText(objectifs)} />
+                    <RichText document={objectifs} />
                   </div>
                 </div>
               )}
@@ -91,7 +81,7 @@ const hasContext = hasRichText(enjeu) || hasRichText(objectifs) || hasRichText(l
                 <div class="partie-context-block">
                   <p class="eyebrow">Livrables</p>
                   <div class="rich-text partie-context-rich">
-                    <RichText document={cleanRichText(livrables)} />
+                    <RichText document={livrables} />
                   </div>
                 </div>
               )}

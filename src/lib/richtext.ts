@@ -92,3 +92,29 @@ export function withoutInlineLabel(doc: unknown): unknown {
 export function cleanRichText(doc: unknown): unknown {
   return withoutInlineLabel(withoutLeadMarker(doc));
 }
+
+/** Vrai si le doc richtext contient du texte visible (récursif : paragraphes, listes, etc.). */
+export function hasRichText(doc: unknown): boolean {
+  if (!doc) return false;
+  if (typeof doc === 'string') return doc.trim().length > 0;
+  const seen = new Set<unknown>();
+  const stack: unknown[] = [doc];
+  while (stack.length > 0) {
+    const node = stack.pop();
+    if (typeof node === 'string') {
+      if (node.trim().length > 0) return true;
+      continue;
+    }
+    if (node && typeof node === 'object') {
+      if (seen.has(node)) continue;
+      seen.add(node);
+      const record = node as Record<string, unknown>;
+      if (typeof record.text === 'string' && record.text.trim().length > 0) return true;
+      for (const value of Object.values(record)) {
+        if (Array.isArray(value)) stack.push(...value);
+        else if (value && typeof value === 'object') stack.push(value);
+      }
+    }
+  }
+  return false;
+}

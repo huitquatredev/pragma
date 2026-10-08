@@ -5,7 +5,7 @@ import { fetchStory, fetchStoriesByComponent, type SectionText, type CoursBlok }
 import { previewInscription } from '../../lib/supabase';
 import { flattenCourses, getProgressIndex, hasCourseAccess } from '../../lib/progress';
 import RichText from '../../components/app/RichText.astro';
-import { cleanRichText } from '../../lib/richtext';
+import { cleanRichText, hasRichText } from '../../lib/richtext';
 import BlocComprendre from '../../components/storyblok/BlocComprendre.astro';
 import BlocQuiz from '../../components/storyblok/BlocQuiz.astro';
 import BlocGuide from '../../components/storyblok/BlocGuide.astro';
@@ -68,16 +68,6 @@ const partNumber = allParts.findIndex((p) => p.uuid === parentPart?.uuid);
 
 const competence = (story.content as { competence?: string }).competence;
 const enjeuCours = (story.content as { enjeu?: unknown }).enjeu;
-
-function hasRichText(doc: unknown): boolean {
-  if (!doc) return false;
-  if (typeof doc === 'string') return doc.trim().length > 0;
-  const node = doc as { content?: Array<{ content?: Array<{ text?: string }> }> };
-  if (!Array.isArray(node.content)) return true;
-  return node.content.some((block) =>
-    (block.content ?? []).some((inline) => (inline.text ?? '').trim().length > 0)
-  );
-}
 
 const hasCompetence = typeof competence === 'string' && competence.trim().length > 0;
 const cleanEnjeu = cleanRichText(enjeuCours);
