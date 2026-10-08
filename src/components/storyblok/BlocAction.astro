@@ -6,7 +6,6 @@ interface Props {
   blok: {
     titre?: string;
     consignes?: unknown;
-    outil_onglet?: string;
   };
 }
 
@@ -14,7 +13,6 @@ const { blok } = Astro.props;
 ---
 <div class="section-text bloc-action">
   <h2>{blok.titre || 'À toi de jouer'}</h2>
-  {blok.outil_onglet && <p class="action-tool"><em>Outil : {blok.outil_onglet}</em></p>}
   {blok.consignes && (
     <div class="rich-text">
       <RichText document={cleanRichText(blok.consignes)} />

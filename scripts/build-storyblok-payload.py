@@ -181,12 +181,8 @@ def build_cours_story(c, c_slug):
                      "intro": rt(c["guide_intro"]), "exemple_lea": guide_corps_lea,
                      "exemple_thomas": guide_corps_th, "_uid": uuid.uuid4().hex})
     if c["action"]:
-        outil = ""
-        for t in c["action"]:
-            if "onglet" in t.lower() or "outil" in t.lower():
-                outil = t[:150]; break
         body.append({"component": "bloc_action", "titre": "À toi de jouer",
-                     "consignes": rt(c["action"]), "outil_onglet": outil, "_uid": uuid.uuid4().hex})
+                     "consignes": rt(c["action"]), "_uid": uuid.uuid4().hex})
     if not body:
         body.append({"component": "section_text", "titre": c["titre"], "corps": rt([c["titre"]]), "_uid": uuid.uuid4().hex})
     return {

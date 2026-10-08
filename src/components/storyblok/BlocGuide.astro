@@ -3,7 +3,6 @@ import RichText from '../app/RichText.astro';
 
 interface Props {
   blok: {
-    titre?: string;
     intro?: unknown;
     exemple_lea?: unknown;
     exemple_thomas?: unknown;
@@ -20,7 +19,7 @@ function hasDoc(doc: unknown): boolean {
 }
 ---
 <div class="section-text bloc-guide">
-  <h2>{blok.titre || 'Guide pas à pas'}</h2>
+  <h2>Sur les chantiers de Léa &amp; Thomas</h2>
   {hasDoc(blok.intro) && (
     <div class="rich-text">
       <RichText document={blok.intro} />
@@ -29,7 +28,7 @@ function hasDoc(doc: unknown): boolean {
   <div class="guide-grid">
     {hasDoc(blok.exemple_lea) && (
       <div class="guide-case">
-        <h3>Le cas de Léa <span class="guide-hint">(service / B2B)</span></h3>
+        <h3>Le cas de Léa (Prestation de services B2B - Consultante en IA)</h3>
         <div class="rich-text">
           <RichText document={blok.exemple_lea} />
         </div>
@@ -37,7 +36,7 @@ function hasDoc(doc: unknown): boolean {
     )}
     {hasDoc(blok.exemple_thomas) && (
       <div class="guide-case">
-        <h3>Le cas de Thomas <span class="guide-hint">(produit / B2C)</span></h3>
+        <h3>Le cas de Thomas (E-commerce B2C - Infusions glacées "Provence &amp; Saveurs")</h3>
         <div class="rich-text">
           <RichText document={blok.exemple_thomas} />
         </div>

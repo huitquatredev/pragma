@@ -45,14 +45,12 @@ const partNumber = allParts.findIndex((p) => p.uuid === parentPart?.uuid);
 const approche = cleanRichText(story.content.approche);
 const resultat = cleanRichText(story.content.resultat);
 const temps = cleanRichText(story.content.temps);
-const outil = cleanRichText(story.content.outil);
 const prerequis = cleanRichText(story.content.prerequis);
 
 const hasContext =
   hasRichText(approche) ||
   hasRichText(resultat) ||
   hasRichText(temps) ||
-  hasRichText(outil) ||
   hasRichText(prerequis);
 ---
 
@@ -111,24 +109,14 @@ const hasContext =
               )}
             </div>
           )}
-          {(hasRichText(temps) || hasRichText(outil)) && (
+          {hasRichText(temps) && (
             <div class="module-context-meta">
-              {hasRichText(temps) && (
-                <div class="module-context-block module-context-block--meta">
-                  <p class="eyebrow">Temps</p>
-                  <div class="rich-text module-context-rich">
-                    <RichText document={temps} />
-                  </div>
+              <div class="module-context-block module-context-block--meta">
+                <p class="eyebrow">Temps</p>
+                <div class="rich-text module-context-rich">
+                  <RichText document={temps} />
                 </div>
-              )}
-              {hasRichText(outil) && (
-                <div class="module-context-block module-context-block--meta">
-                  <p class="eyebrow">Outil</p>
-                  <div class="rich-text module-context-rich">
-                    <RichText document={outil} />
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
           )}
         </section>
