@@ -1,6 +1,12 @@
 import type { APIRoute } from 'astro';
 import { fetchStory, type StoryblokStory } from '../../lib/storyblok';
-import { allFormFields, getCoursForm, livrableMissingCount, type AnswersByCours, type FormSection } from '../../lib/livrables';
+import {
+  allFormFields,
+  getCoursForm,
+  livrableMissingCount,
+  type AnswersByCours,
+  type FormSection,
+} from '../../lib/livrables';
 import { coachEmail, escapeHtml, sendCoachEmail } from '../../lib/email';
 
 export const POST: APIRoute = async (context) => {
@@ -26,19 +32,39 @@ export const POST: APIRoute = async (context) => {
   }
   if (!slug) return json({ error: 'partie_slug manquant.' }, 400);
 
-  const partie = await fetchStory(`parties/${slug}`).catch(() => null);
+  let partie: StoryblokStory | null = null;
+  try {
+    partie = await fetchStory(`parties/${slug}`);
+  } catch (err) {
+    console.error(
+      '[livrable_submit] Storyblok fetch failed for partie:',
+      slug,
+      err instanceof Error ? err.message : err
+    );
+  }
   if (!partie) return json({ error: 'Partie introuvable.' }, 404);
 
   // Cours rattachés (modules + directs), puis re-fetch pour le body/form_fields.
   const refs: StoryblokStory[] = [
-    ...((partie.content.modules ?? []).flatMap((m) => m.content?.cours ?? [])),
+    ...(partie.content.modules ?? []).flatMap((m) => m.content?.cours ?? []),
     ...(partie.content.cours ?? []),
   ].filter((c) => c && typeof c === 'object' && c.uuid);
-  const stories = await Promise.all(
-    refs.map((ref) =>
-      fetchStory(ref.full_slug || `cours/${ref.slug}`).catch(() => null)
-    )
-  );
+  // Sequential fetches: a Promise.all burst over ~10 stories can hit
+  // Storyblok CDN rate limits (429) right after the page just fetched them.
+  const stories: (StoryblokStory | null)[] = [];
+  for (const ref of refs) {
+    const refSlug = ref.full_slug || `cours/${ref.slug}`;
+    try {
+      stories.push(await fetchStory(refSlug));
+    } catch (err) {
+      console.error(
+        '[livrable_submit] Storyblok fetch failed for cours:',
+        refSlug,
+        err instanceof Error ? err.message : err
+      );
+      stories.push(null);
+    }
+  }
   const formsByCours: Record<string, FormSection[]> = {};
   const titlesByCours: Record<string, string> = {};
   for (const story of stories) {
@@ -113,5 +139,10 @@ export const POST: APIRoute = async (context) => {
     text: `Livrable ${partie.content.title} — ${user.email} — ${dateFr}\n${blocksText.join('\n')}`,
   });
 
-  return json({ ok: true, submitted_at: submittedAt, email_sent: emailResult.sent, email_warning: emailResult.reason ?? null });
+  return json({
+    ok: true,
+    submitted_at: submittedAt,
+    email_sent: emailResult.sent,
+    email_warning: emailResult.reason ?? null,
+  });
 };

@@ -33,9 +33,15 @@ if (!isPreview) {
     ...(story.content.modules ?? []).flatMap((m) => m.content?.cours ?? []),
     ...(story.content.cours ?? []),
   ].filter((c) => c && typeof c === 'object' && c.uuid && c.content !== null);
-  const stories = await Promise.all(
-    refs.map((ref) => fetchStory(ref.full_slug || `cours/${ref.slug}`).catch(() => null))
-  );
+  // Sequential fetches: a Promise.all burst can hit Storybok CDN rate limits.
+  const stories: (StoryblokStory | null)[] = [];
+  for (const ref of refs) {
+    try {
+      stories.push(await fetchStory(ref.full_slug || `cours/${ref.slug}`));
+    } catch {
+      stories.push(null);
+    }
+  }
   forms = (stories.filter(Boolean) as StoryblokStory[])
     .map((s) => ({
       uuid: s.uuid,
