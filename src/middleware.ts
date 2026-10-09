@@ -1,7 +1,7 @@
 import { defineMiddleware } from 'astro:middleware';
 import { createSupabaseServerClient, getInscription } from './lib/supabase';
 
-const protectedPrefixes = ['/dashboard', '/parties', '/modules', '/cours'];
+const protectedPrefixes = ['/dashboard', '/parties', '/modules', '/cours', '/api'];
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const isPreview = process.env.IS_PREVIEW === 'true' || import.meta.env.IS_PREVIEW === 'true';
@@ -36,6 +36,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
   context.locals.supabase = user ? supabase : null;
 
   if (!user) {
+    // API routes answer JSON themselves; pages redirect to login.
+    if (context.url.pathname.startsWith('/api/')) return next();
     return context.redirect(`/login?next=${encodeURIComponent(context.url.pathname)}`);
   }
 

@@ -47,5 +47,21 @@ const nextCourse = inscription
       )
     }
     {inscription && <ProgressIndex {parts} {validatedIds} {inscription} />}
+    <section aria-label="Mes livrables" class="livrables-index">
+      <h2>Mes livrables</h2>
+      <p>Un livrable par partie : retrouvez, modifiez et envoyez vos données.</p>
+      <ul class="content-list">
+        {
+          parts.map((part) => (
+            <li>
+              <a href={`/dashboard/livrables/${part.slug}`}>
+                <span>{part.content.title}</span>
+                <span aria-hidden="true">→</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
   </main>
 </AppLayout>

@@ -1,15 +1,23 @@
 ---
 import RichText from '../app/RichText.astro';
+import CoursForm from '../app/CoursForm.astro';
 import { cleanRichText } from '../../lib/richtext';
+import { parseFormFields } from '../../lib/livrables';
 
 interface Props {
   blok: {
     titre?: string;
     consignes?: unknown;
+    form_fields?: unknown[];
   };
+  coursId?: string;
+  partieId?: string;
+  initial?: Record<string, unknown>;
 }
 
-const { blok } = Astro.props;
+const { blok, coursId, partieId, initial = {} } = Astro.props;
+const sections = parseFormFields(blok.form_fields ?? []);
+const showForm = Boolean(coursId && partieId && sections.some((s) => s.fields.length > 0));
 ---
 <div class="section-text bloc-action">
   <h2>{blok.titre || 'À toi de jouer'}</h2>
@@ -17,5 +25,13 @@ const { blok } = Astro.props;
     <div class="rich-text">
       <RichText document={cleanRichText(blok.consignes)} />
     </div>
+  )}
+  {showForm && (
+    <CoursForm
+      coursId={coursId!}
+      partieId={partieId!}
+      sections={sections}
+      initial={initial}
+    />
   )}
 </div>

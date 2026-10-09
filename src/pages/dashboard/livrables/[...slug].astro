@@ -1,0 +1,171 @@
+---
+import AppLayout from '../../../layouts/AppLayout.astro';
+import Breadcrumb from '../../../components/app/Breadcrumb.astro';
+import CoursForm from '../../../components/app/CoursForm.astro';
+import { fetchStory, type StoryblokStory } from '../../../lib/storyblok';
+import { previewInscription } from '../../../lib/supabase';
+import { getCoursForm, livrableMissingCount, type AnswersByCours, type FormSection } from '../../../lib/livrables';
+
+const isPreview = process.env.IS_PREVIEW === 'true' || import.meta.env.IS_PREVIEW === 'true';
+const slug = Astro.params.slug!;
+const story = await fetchStory(`parties/${slug}`).catch(() => null);
+if (!story) {
+  return new Response(null, { status: 404, statusText: 'Not found' });
+}
+const inscription = isPreview ? previewInscription : Astro.locals.inscription;
+
+interface CoursFormData {
+  uuid: string;
+  slug: string;
+  title: string;
+  sections: FormSection[];
+}
+
+let forms: CoursFormData[] = [];
+if (!isPreview) {
+  const refs: StoryblokStory[] = [
+    ...((story.content.modules ?? []).flatMap((m) => m.content?.cours ?? [])),
+    ...(story.content.cours ?? []),
+  ].filter((c) => c && typeof c === 'object' && c.uuid && c.content !== null);
+  const stories = await Promise.all(
+    refs.map((ref) => fetchStory(ref.full_slug || `cours/${ref.slug}`).catch(() => null))
+  );
+  forms = (stories.filter(Boolean) as StoryblokStory[])
+    .map((s) => ({
+      uuid: s.uuid,
+      slug: s.slug,
+      title: s.content.title ?? s.slug,
+      sections: getCoursForm(s),
+    }))
+    .filter((f) => f.sections.some((sec) => sec.fields.length > 0));
+}
+
+let answers: AnswersByCours = {};
+let submission: { submitted_at: string } | null = null;
+if (!isPreview && Astro.locals.supabase && Astro.locals.user && forms.length > 0) {
+  try {
+    const { data: rows } = await Astro.locals.supabase
+      .from('form_answers')
+      .select('cours_id, payload')
+      .eq('user_id', Astro.locals.user.id)
+      .in(
+        'cours_id',
+        forms.map((f) => f.uuid)
+      );
+    for (const row of (rows as { cours_id: string; payload: Record<string, unknown> }[]) ?? []) {
+      answers[row.cours_id] = row.payload ?? {};
+    }
+    const { data: sub } = await Astro.locals.supabase
+      .from('livrable_submissions')
+      .select('submitted_at')
+      .eq('user_id', Astro.locals.user.id)
+      .eq('partie_id', story.uuid)
+      .maybeSingle();
+    submission = (sub as { submitted_at: string } | null) ?? null;
+  } catch {
+    answers = {};
+  }
+}
+
+const formsByCours: Record<string, FormSection[]> = Object.fromEntries(
+  forms.map((f) => [f.uuid, f.sections])
+);
+const { missing, total } = livrableMissingCount(formsByCours, answers);
+const hasAccess = Boolean(inscription?.correction);
+const canSubmit = !isPreview && hasAccess && total > 0 && missing === 0;
+const submitReason = isPreview
+  ? 'Aperçu : connectez-vous pour envoyer.'
+  : !hasAccess
+    ? 'Votre accès ne comprend pas la correction.'
+    : total === 0
+      ? 'Aucun formulaire dans cette partie pour le moment.'
+      : missing > 0
+        ? `Complétez les ${missing} champ${missing > 1 ? 's' : ''} restant${missing > 1 ? 's' : ''} (${total - missing}/${total} remplis).`
+        : submission
+          ? `Envoyé le ${new Date(submission.submitted_at).toLocaleString('fr-FR')} — vous pouvez modifier puis renvoyer.`
+          : 'Livrable complet — vous pouvez l’envoyer.';
+---
+
+<AppLayout title={`Livrable — ${story.content.title} — Pragma Formation`}>
+  <main class="content-shell">
+    <p class="eyebrow">LIVRABLE</p>
+    <h1>{story.content.title}</h1>
+    <Breadcrumb
+      items={[
+        { label: 'Dashboard', href: '/dashboard' },
+        { label: story.content.title },
+      ]}
+    />
+    {
+      submission && (
+        <p class="livrable-submitted">
+          Dernier envoi : {new Date(submission.submitted_at).toLocaleString('fr-FR')}
+        </p>
+      )
+    }
+    {
+      forms.length === 0 && (
+        <p>Aucun formulaire « À toi de jouer » dans cette partie pour le moment.</p>
+      )
+    }
+    {
+      forms.map((form) => (
+        <section class="livrable-cours" aria-label={form.title}>
+          <h2>
+            <a href={`/cours/${form.slug}`}>{form.title}</a>
+          </h2>
+          <CoursForm
+            coursId={form.uuid}
+            partieId={story.uuid}
+            sections={form.sections}
+            initial={answers[form.uuid] ?? {}}
+            showDelete
+          />
+        </section>
+      ))
+    }
+    {
+      forms.length > 0 && (
+        <form id="livrable-submit" class="livrable-submit" data-partie-slug={story.slug}>
+          <p class="livrable-status" role="status" aria-live="polite">{submitReason}</p>
+          <button type="submit" class="button" disabled={!canSubmit}>
+            Envoyer pour relecture
+          </button>
+          {!hasAccess && (
+            <p class="livrable-aide">Bouton désactivé : accès correction requis.</p>
+          )}
+          {hasAccess && missing > 0 && (
+            <p class="livrable-aide">Bouton désactivé : tous les champs sont requis.</p>
+          )}
+        </form>
+      )
+    }
+  </main>
+</AppLayout>
+
+<script>
+  const form = document.getElementById('livrable-submit');
+  if (form) {
+    const status = form.querySelector('.livrable-status');
+    const button = form.querySelector('button[type="submit"]');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (button) button.disabled = true;
+      if (status) status.textContent = 'Envoi en cours…';
+      try {
+        const res = await fetch('/api/livrable_submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ partie_slug: form.dataset.partieSlug }),
+        });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(json.error || 'Échec de l’envoi.');
+        if (status)
+          status.textContent = `Envoyé le ${new Date(json.submitted_at).toLocaleString('fr-FR')}${json.email_sent ? '' : ' (email coach non configuré — voir logs).'}`;
+      } catch (err) {
+        if (status) status.textContent = err instanceof Error ? err.message : 'Échec de l’envoi.';
+        if (button) button.disabled = false;
+      }
+    });
+  }
+</script>

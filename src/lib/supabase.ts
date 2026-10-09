@@ -41,6 +41,7 @@ export function createSupabaseServerClient(context: APIContext) {
 export interface Inscription {
   upgrade: boolean;
   camille: boolean;
+  correction: boolean;
   first_name: string | null;
   last_name: string | null;
 }
@@ -48,6 +49,7 @@ export interface Inscription {
 export const previewInscription: Inscription = {
   upgrade: true,
   camille: true,
+  correction: true,
   first_name: null,
   last_name: null,
 };
@@ -59,7 +61,7 @@ export async function getInscription(
   const trimmed = email.trim();
   let { data, error } = await supabase
     .from('pragma_inscriptions')
-    .select('upgrade, camille, first_name, last_name')
+    .select('upgrade, camille, correction, first_name, last_name')
     .ilike('email', trimmed)
     .limit(1)
     .maybeSingle();
@@ -67,7 +69,7 @@ export async function getInscription(
   if (!data) {
     ({ data, error } = await supabase
       .from('pragma_inscriptions')
-      .select('upgrade, camille, first_name, last_name')
+      .select('upgrade, camille, correction, first_name, last_name')
       .ilike('email_discord', trimmed)
       .limit(1)
       .maybeSingle());
@@ -78,6 +80,7 @@ export async function getInscription(
   return {
     upgrade: Boolean(data.upgrade),
     camille: Boolean(data.camille),
+    correction: Boolean((data as Record<string, unknown>).correction ?? false),
     first_name: data.first_name ?? null,
     last_name: data.last_name ?? null,
   };

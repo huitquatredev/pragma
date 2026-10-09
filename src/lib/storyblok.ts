@@ -57,7 +57,7 @@ export type CoursBlok =
       explication?: unknown;
     }
   | { component: 'bloc_guide'; titre?: string; intro?: unknown; exemple_lea?: unknown; exemple_thomas?: unknown }
-  | { component: 'bloc_action'; titre?: string; consignes?: unknown };
+  | { component: 'bloc_action'; titre?: string; consignes?: unknown; form_fields?: unknown[] };
 
 export function getStoryblokApi() {
   return useStoryblokApi();

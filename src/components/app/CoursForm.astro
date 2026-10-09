@@ -1,0 +1,176 @@
+---
+import RichText from './RichText.astro';
+import { cleanRichText } from '../../lib/richtext';
+import type { FormSection } from '../../lib/livrables';
+
+interface Props {
+  coursId: string;
+  partieId: string;
+  sections: FormSection[];
+  initial?: Record<string, unknown>;
+  showDelete?: boolean;
+}
+
+const { coursId, partieId, sections, initial = {}, showDelete = false } = Astro.props;
+const formId = `livrable-form-${coursId}`;
+const statusId = `${formId}-status`;
+
+function str(key: string): string {
+  const v = initial[key];
+  return typeof v === 'string' ? v : typeof v === 'number' ? String(v) : '';
+}
+---
+
+<form id={formId} class="livrable-form" data-cours-id={coursId} data-partie-id={partieId}>
+  {
+    sections.map((section) => (
+      <fieldset class="livrable-section">
+        {section.titre && <legend class="livrable-section-title">{section.titre}</legend>}
+        {section.intro && (
+          <div class="rich-text livrable-intro">
+            <RichText document={cleanRichText(section.intro)} />
+          </div>
+        )}
+        {section.fields.map((field) => (
+          <div class="livrable-field" data-field-key={field.key} data-field-kind={field.kind}>
+            <label for={`${formId}-${field.key}`}>{field.label}</label>
+            {field.aide && <p class="livrable-aide">{field.aide}</p>}
+            {field.kind === 'text' && (
+              <textarea
+                id={`${formId}-${field.key}`}
+                name={field.key}
+                rows="4"
+                placeholder={field.placeholder ?? ''}
+              >
+                {str(field.key)}
+              </textarea>
+            )}
+            {field.kind === 'number' && (
+              <div class="livrable-number">
+                <input
+                  id={`${formId}-${field.key}`}
+                  name={field.key}
+                  type="number"
+                  inputmode="decimal"
+                  value={str(field.key)}
+                />
+                {field.unite && <span class="livrable-unite">{field.unite}</span>}
+              </div>
+            )}
+            {field.kind === 'image' && (
+              <>
+                {str(field.key) && (
+                  <p>
+                    <img
+                      src={str(field.key)}
+                      alt={`Capture — ${field.label}`}
+                      class="livrable-preview"
+                      loading="lazy"
+                    />
+                  </p>
+                )}
+                <input type="hidden" name={field.key} value={str(field.key)} />
+                <input
+                  id={`${formId}-${field.key}`}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  data-image-input={field.key}
+                />
+                <p class="livrable-aide">JPEG, PNG ou WebP — 5 Mo max.</p>
+              </>
+            )}
+          </div>
+        ))}
+      </fieldset>
+    ))
+  }
+  <div class="livrable-actions">
+    <button type="submit" class="button">Enregistrer</button>
+    {
+      showDelete && (
+        <button type="button" class="button button--text" data-delete>
+          Supprimer mes réponses
+        </button>
+      )
+    }
+    <p id={statusId} class="livrable-status" role="status" aria-live="polite"></p>
+  </div>
+</form>
+
+<script define:vars={{ formId, statusId }}>
+  const form = document.getElementById(formId);
+  const status = document.getElementById(statusId);
+  if (form && status) {
+    const setStatus = (msg, isError = false) => {
+      status.textContent = msg;
+      status.dataset.error = isError ? 'true' : 'false';
+    };
+    // Upload immédiat des captures vers Supabase Storage (bucket livrable-images).
+    form.querySelectorAll('input[type="file"][data-image-input]').forEach((input) => {
+      input.addEventListener('change', async () => {
+        const file = input.files?.[0];
+        if (!file) return;
+        const key = input.getAttribute('data-image-input');
+        const hidden = form.querySelector(`input[type="hidden"][name="${CSS.escape(key)}"]`);
+        setStatus('Envoi de l’image…');
+        try {
+          const body = new FormData();
+          body.append('file', file);
+          body.append('cours_id', form.dataset.coursId ?? '');
+          const res = await fetch('/api/livrable_upload', { method: 'POST', body });
+          const json = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(json.error || 'Échec de l’envoi de l’image.');
+          if (hidden) hidden.value = json.url;
+          setStatus('Image envoyée — pensez à Enregistrer.');
+        } catch (e) {
+          setStatus(e instanceof Error ? e.message : 'Échec de l’envoi.', true);
+        }
+      });
+    });
+    form.querySelector('[data-delete]')?.addEventListener('click', async () => {
+      if (!confirm('Supprimer vos réponses pour ce cours ?')) return;
+      setStatus('Suppression…');
+      try {
+        const res = await fetch(
+          `/api/form_answers?cours_id=${encodeURIComponent(form.dataset.coursId ?? '')}`,
+          { method: 'DELETE' }
+        );
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(json.error || 'Échec de la suppression.');
+        form.querySelectorAll('textarea, input[type="number"], input[type="hidden"]').forEach((el) => {
+          el.value = '';
+        });
+        form.querySelectorAll('input[type="file"]').forEach((el) => {
+          el.value = '';
+        });
+        setStatus('Réponses supprimées.');
+      } catch (e) {
+        setStatus(e instanceof Error ? e.message : 'Échec de la suppression.', true);
+      }
+    });
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      setStatus('Enregistrement…');
+      const payload = {};
+      form.querySelectorAll('textarea[name], input[type="number"][name], input[type="hidden"][name]').forEach((el) => {
+        payload[el.getAttribute('name')] = el.value;
+      });
+      try {
+        const res = await fetch('/api/form_answers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            cours_id: form.dataset.coursId,
+            partie_id: form.dataset.partieId,
+            payload,
+          }),
+        });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(json.error || 'Échec de l’enregistrement.');
+        setStatus('Enregistré.');
+      } catch (err) {
+        setStatus(err instanceof Error ? err.message : 'Échec de l’enregistrement.', true);
+      }
+    });
+  }
+</script>

@@ -563,3 +563,109 @@ a {
   font-size: 1.125rem;
   line-height: 1.65;
 }
+
+/* Formulaires « À toi de jouer » + pages livrables */
+.livrable-form {
+  display: grid;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+.livrable-section {
+  border: 1px solid var(--line);
+  padding: 1.25rem;
+  display: grid;
+  gap: 1.25rem;
+}
+.livrable-section-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  padding: 0 0.5rem;
+}
+.livrable-intro {
+  margin: 0;
+  font-size: 1rem;
+}
+.livrable-field {
+  display: grid;
+  gap: 0.4rem;
+}
+.livrable-field label {
+  font-weight: 700;
+}
+.livrable-aide {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #555;
+}
+.livrable-field textarea,
+.livrable-field input[type='number'] {
+  border: 1px solid var(--ink);
+  background: #fff;
+  padding: 0.75rem;
+  font: inherit;
+  width: 100%;
+  box-sizing: border-box;
+}
+.livrable-number {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.livrable-unite {
+  font-size: 0.9rem;
+  color: #555;
+}
+.livrable-preview {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+}
+.livrable-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+}
+.livrable-status {
+  margin: 0;
+  font-size: 0.95rem;
+}
+.livrable-status[data-error='true'] {
+  color: #a00;
+}
+.livrable-cours {
+  border-top: 1px solid var(--line);
+  padding: 2rem 0;
+}
+.livrable-cours h2 {
+  font-size: 1.4rem;
+  margin: 0;
+}
+.livrable-cours h2 a {
+  text-decoration: none;
+}
+.livrable-submit {
+  border-top: 2px solid var(--ink);
+  padding: 2rem 0;
+  display: grid;
+  gap: 1rem;
+  justify-items: start;
+}
+.livrable-submit .button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.livrable-submitted {
+  background: var(--accent);
+  border: 1px solid var(--ink);
+  padding: 0.75rem 1rem;
+  display: inline-block;
+}
+.livrables-index {
+  margin-top: 3rem;
+  border-top: 1px solid var(--ink);
+  padding-top: 2rem;
+}
+.livrables-index h2 {
+  margin: 0 0 0.5rem;
+}

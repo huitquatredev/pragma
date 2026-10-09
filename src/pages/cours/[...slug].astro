@@ -10,6 +10,7 @@ import BlocComprendre from '../../components/storyblok/BlocComprendre.astro';
 import BlocQuiz from '../../components/storyblok/BlocQuiz.astro';
 import BlocGuide from '../../components/storyblok/BlocGuide.astro';
 import BlocAction from '../../components/storyblok/BlocAction.astro';
+import { getCoursForm, hasForm } from '../../lib/livrables';
 
 const isPreview = process.env.IS_PREVIEW === 'true' || import.meta.env.IS_PREVIEW === 'true';
 const story = await fetchStory(`cours/${Astro.params.slug!}`).catch(
@@ -69,6 +70,28 @@ const partNumber = allParts.findIndex((p) => p.uuid === parentPart?.uuid);
 const competence = (story.content as { competence?: string }).competence;
 const enjeuCours = (story.content as { enjeu?: unknown }).enjeu;
 
+const coursSections = getCoursForm(story);
+const coursHasForm = hasForm(coursSections);
+const partieId = parentPart?.uuid ?? '';
+
+let initialAnswers: Record<string, unknown> = {};
+if (coursHasForm && !isPreview && Astro.locals.supabase && Astro.locals.user) {
+  try {
+    const { data } = await Astro.locals.supabase
+      .from('form_answers')
+      .select('payload')
+      .eq('user_id', Astro.locals.user.id)
+      .eq('cours_id', story.uuid)
+      .maybeSingle();
+    const payload = (data as { payload?: unknown } | null)?.payload;
+    if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
+      initialAnswers = payload as Record<string, unknown>;
+    }
+  } catch {
+    initialAnswers = {};
+  }
+}
+
 const hasCompetence = typeof competence === 'string' && competence.trim().length > 0;
 const cleanEnjeu = cleanRichText(enjeuCours);
 ---
@@ -122,7 +145,15 @@ const cleanEnjeu = cleanRichText(enjeuCours);
         if (section.component === 'bloc_comprendre') return <BlocComprendre blok={section} />;
         if (section.component === 'bloc_quiz') return <BlocQuiz blok={section} />;
         if (section.component === 'bloc_guide') return <BlocGuide blok={section} />;
-        if (section.component === 'bloc_action') return <BlocAction blok={section} />;
+        if (section.component === 'bloc_action')
+          return (
+            <BlocAction
+              blok={section}
+              coursId={story.uuid}
+              partieId={partieId}
+              initial={initialAnswers}
+            />
+          );
         const legacy = section as SectionText;
         return (
           <div class="section-text">
