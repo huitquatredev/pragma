@@ -17,6 +17,17 @@ const IS_PREVIEW = env.IS_PREVIEW || process.env.IS_PREVIEW;
 const STORYBLOK_ENABLE_BRIDGE =
   env.STORYBLOK_ENABLE_BRIDGE || process.env.STORYBLOK_ENABLE_BRIDGE;
 
+// Hosts Astro must trust when reconstructing the request URL (origin check
+// for form POSTs). Without this, `context.url` falls back to localhost and
+// every form submission (login, logout, progress) gets a 403 in production.
+const SITE_HOST = (() => {
+  try {
+    return new URL(SITE_URL).hostname;
+  } catch {
+    return null;
+  }
+})();
+
 // https://astro.build/config
 export default defineConfig({
   output: 'server',
@@ -51,4 +62,16 @@ export default defineConfig({
   ],
 
   site: SITE_URL,
+
+  security: {
+    allowedDomains: [
+      // Production / custom domain, from SITE_URL env.
+      ...(SITE_HOST ? [{ hostname: SITE_HOST }] : []),
+      // Vercel preview deployments (*.vercel.app).
+      { hostname: '*.vercel.app' },
+      // Local dev (any port).
+      { hostname: 'localhost' },
+      { hostname: '127.0.0.1' },
+    ],
+  },
 });
