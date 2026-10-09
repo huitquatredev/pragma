@@ -259,8 +259,11 @@ const submitReason = isPreview
         });
         const json = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(json.error || 'Échec de l’envoi.');
-        if (statusEl)
-          statusEl.textContent = `Envoyé le ${new Date(json.submitted_at).toLocaleString('fr-FR')}${json.email_sent ? '' : ' (email coach non configuré — voir logs).'}`;
+        const dateEnvoyee = new Date(json.submitted_at).toLocaleString('fr-FR');
+        const avertissement = json.email_sent
+          ? ''
+          : ' (' + (json.email_warning || 'email coach non configuré — voir logs') + ').';
+        if (statusEl) statusEl.textContent = 'Envoyé le ' + dateEnvoyee + avertissement;
       } catch (err) {
         if (statusEl)
           statusEl.textContent = err instanceof Error ? err.message : 'Échec de l’envoi.';
