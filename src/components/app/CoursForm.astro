@@ -21,7 +21,12 @@ function str(key: string): string {
 }
 ---
 
-<form id={formId} class="livrable-form" data-cours-id={coursId} data-partie-id={partieId}>
+<form
+  id={formId}
+  class="livrable-form"
+  data-cours-id={coursId}
+  data-partie-id={partieId}
+  data-saved={JSON.stringify(initial)}>
   {
     sections.map((section) => (
       <fieldset class="livrable-section">
@@ -36,14 +41,15 @@ function str(key: string): string {
             <label for={`${formId}-${field.key}`}>{field.label}</label>
             {field.aide && <p class="livrable-aide">{field.aide}</p>}
             {field.kind === 'text' && (
+              // NOTE: keep the textarea EMPTY in markup (even Prettier-expanded):
+              // any newline/indentation inside would become part of the value.
+              // Initial values are set via JS below from `initial`.
               <textarea
                 id={`${formId}-${field.key}`}
                 name={field.key}
                 rows="4"
                 placeholder={field.placeholder ?? ''}
-              >
-                {str(field.key)}
-              </textarea>
+              />
             )}
             {field.kind === 'number' && (
               <div class="livrable-number">
@@ -97,10 +103,17 @@ function str(key: string): string {
   </div>
 </form>
 
-<script define:vars={{ formId, statusId }}>
+<script define:vars={{ formId, statusId, initial }}>
   const form = document.getElementById(formId);
   const status = document.getElementById(statusId);
   if (form && status) {
+    // Prefill textareas from saved answers (done in JS so markup
+    // whitespace can never leak into values).
+    form.querySelectorAll('textarea[name]').forEach((el) => {
+      const key = el.getAttribute('name');
+      const value = key ? initial[key] : undefined;
+      if (typeof value === 'string' || typeof value === 'number') el.value = String(value);
+    });
     const setStatus = (msg, isError = false) => {
       status.textContent = msg;
       status.dataset.error = isError ? 'true' : 'false';
@@ -122,6 +135,7 @@ function str(key: string): string {
           if (!res.ok) throw new Error(json.error || 'Échec de l’envoi de l’image.');
           if (hidden) hidden.value = json.url;
           setStatus('Image envoyée — pensez à Enregistrer.');
+          window.dispatchEvent(new Event('livrable:update'));
         } catch (e) {
           setStatus(e instanceof Error ? e.message : 'Échec de l’envoi.', true);
         }
@@ -137,13 +151,17 @@ function str(key: string): string {
         );
         const json = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(json.error || 'Échec de la suppression.');
-        form.querySelectorAll('textarea, input[type="number"], input[type="hidden"]').forEach((el) => {
-          el.value = '';
-        });
+        form
+          .querySelectorAll('textarea, input[type="number"], input[type="hidden"]')
+          .forEach((el) => {
+            el.value = '';
+          });
         form.querySelectorAll('input[type="file"]').forEach((el) => {
           el.value = '';
         });
         setStatus('Réponses supprimées.');
+        form.dataset.saved = '{}';
+        window.dispatchEvent(new Event('livrable:update'));
       } catch (e) {
         setStatus(e instanceof Error ? e.message : 'Échec de la suppression.', true);
       }
@@ -152,9 +170,13 @@ function str(key: string): string {
       e.preventDefault();
       setStatus('Enregistrement…');
       const payload = {};
-      form.querySelectorAll('textarea[name], input[type="number"][name], input[type="hidden"][name]').forEach((el) => {
-        payload[el.getAttribute('name')] = el.value;
-      });
+      form
+        .querySelectorAll('textarea[name], input[type="number"][name], input[type="hidden"][name]')
+        .forEach((el) => {
+          const name = el.getAttribute('name');
+          // Trim text edges: indentation/newlines must never be stored as content.
+          payload[name] = el instanceof HTMLTextAreaElement ? el.value.trim() : el.value;
+        });
       try {
         const res = await fetch('/api/form_answers', {
           method: 'POST',
@@ -168,6 +190,8 @@ function str(key: string): string {
         const json = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(json.error || 'Échec de l’enregistrement.');
         setStatus('Enregistré.');
+        form.dataset.saved = JSON.stringify(payload);
+        window.dispatchEvent(new Event('livrable:update'));
       } catch (err) {
         setStatus(err instanceof Error ? err.message : 'Échec de l’enregistrement.', true);
       }

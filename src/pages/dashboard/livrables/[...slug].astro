@@ -4,7 +4,13 @@ import Breadcrumb from '../../../components/app/Breadcrumb.astro';
 import CoursForm from '../../../components/app/CoursForm.astro';
 import { fetchStory, type StoryblokStory } from '../../../lib/storyblok';
 import { previewInscription } from '../../../lib/supabase';
-import { getCoursForm, livrableMissingCount, type AnswersByCours, type FormSection } from '../../../lib/livrables';
+import {
+  allFormFields,
+  getCoursForm,
+  livrableMissingCount,
+  type AnswersByCours,
+  type FormSection,
+} from '../../../lib/livrables';
 
 const isPreview = process.env.IS_PREVIEW === 'true' || import.meta.env.IS_PREVIEW === 'true';
 const slug = Astro.params.slug!;
@@ -24,7 +30,7 @@ interface CoursFormData {
 let forms: CoursFormData[] = [];
 if (!isPreview) {
   const refs: StoryblokStory[] = [
-    ...((story.content.modules ?? []).flatMap((m) => m.content?.cours ?? [])),
+    ...(story.content.modules ?? []).flatMap((m) => m.content?.cours ?? []),
     ...(story.content.cours ?? []),
   ].filter((c) => c && typeof c === 'object' && c.uuid && c.content !== null);
   const stories = await Promise.all(
@@ -71,6 +77,11 @@ const formsByCours: Record<string, FormSection[]> = Object.fromEntries(
   forms.map((f) => [f.uuid, f.sections])
 );
 const { missing, total } = livrableMissingCount(formsByCours, answers);
+// Required field keys per cours, embedded for the client-side live check.
+const requiredByCours: Record<string, string[]> = Object.fromEntries(
+  forms.map((f) => [f.uuid, allFormFields(f.sections).map((field) => field.key)])
+);
+const submittedLabel = submission ? new Date(submission.submitted_at).toLocaleString('fr-FR') : '';
 const hasAccess = Boolean(inscription?.correction);
 const canSubmit = !isPreview && hasAccess && total > 0 && missing === 0;
 const submitReason = isPreview
@@ -91,10 +102,7 @@ const submitReason = isPreview
     <p class="eyebrow">LIVRABLE</p>
     <h1>{story.content.title}</h1>
     <Breadcrumb
-      items={[
-        { label: 'Dashboard', href: '/dashboard' },
-        { label: story.content.title },
-      ]}
+      items={[{ label: 'Dashboard', href: '/dashboard' }, { label: story.content.title }]}
     />
     {
       submission && (
@@ -126,16 +134,24 @@ const submitReason = isPreview
     }
     {
       forms.length > 0 && (
-        <form id="livrable-submit" class="livrable-submit" data-partie-slug={story.slug}>
-          <p class="livrable-status" role="status" aria-live="polite">{submitReason}</p>
+        <form
+          id="livrable-submit"
+          class="livrable-submit"
+          data-partie-slug={story.slug}
+          data-has-access={hasAccess ? 'true' : 'false'}
+          data-submitted-label={submittedLabel}
+          data-required={JSON.stringify(requiredByCours)}>
+          <p class="livrable-status" role="status" aria-live="polite">
+            {submitReason}
+          </p>
           <button type="submit" class="button" disabled={!canSubmit}>
             Envoyer pour relecture
           </button>
-          {!hasAccess && (
-            <p class="livrable-aide">Bouton désactivé : accès correction requis.</p>
-          )}
-          {hasAccess && missing > 0 && (
-            <p class="livrable-aide">Bouton désactivé : tous les champs sont requis.</p>
+          {!hasAccess && <p class="livrable-aide">Bouton désactivé : accès correction requis.</p>}
+          {hasAccess && (
+            <p class="livrable-aide" data-incomplete-hint hidden={missing === 0}>
+              Bouton désactivé : tous les champs sont requis.
+            </p>
           )}
         </form>
       )
@@ -144,27 +160,105 @@ const submitReason = isPreview
 </AppLayout>
 
 <script>
-  const form = document.getElementById('livrable-submit');
-  if (form) {
-    const status = form.querySelector('.livrable-status');
-    const button = form.querySelector('button[type="submit"]');
-    form.addEventListener('submit', async (e) => {
+  const submitForm = document.getElementById('livrable-submit');
+  if (submitForm) {
+    const statusEl = submitForm.querySelector('.livrable-status');
+    const submitButton = submitForm.querySelector('button[type="submit"]');
+    const incompleteHint = submitForm.querySelector('[data-incomplete-hint]');
+    const hasAccess = submitForm.dataset.hasAccess === 'true';
+    const submittedLabel = submitForm.dataset.submittedLabel || '';
+    let required = {};
+    try {
+      required = JSON.parse(submitForm.dataset.required || '{}');
+    } catch {
+      required = {};
+    }
+    const totalFields = Object.values(required).reduce((n, keys) => n + keys.length, 0);
+
+    const coursScope = (coursId) =>
+      document.querySelector(`form.livrable-form[data-cours-id="${CSS.escape(coursId)}"]`);
+
+    const fieldValue = (coursId, key) => {
+      const el = coursScope(coursId)?.querySelector(`[name="${CSS.escape(key)}"]`);
+      return el ? String(el.value ?? '') : '';
+    };
+
+    const savedValue = (coursId, key) => {
+      let saved = {};
+      try {
+        saved = JSON.parse(coursScope(coursId)?.dataset.saved || '{}');
+      } catch {
+        saved = {};
+      }
+      const value = saved[key];
+      return typeof value === 'string' || typeof value === 'number' ? String(value) : '';
+    };
+
+    // Live check: enabled only when every field is filled AND saved
+    // (server re-validates on submit — this is UX only).
+    const refreshSubmitState = () => {
+      if (!hasAccess || !submitButton || totalFields === 0) return;
+      let missing = 0;
+      let dirty = false;
+      for (const [coursId, keys] of Object.entries(required)) {
+        for (const key of keys) {
+          const current = fieldValue(coursId, key).trim();
+          if (current === '') missing += 1;
+          if (current !== savedValue(coursId, key).trim()) dirty = true;
+        }
+      }
+      const done = totalFields - missing;
+      if (dirty) {
+        submitButton.disabled = true;
+        if (statusEl)
+          statusEl.textContent =
+            'Des modifications ne sont pas enregistrées — cliquez « Enregistrer » dans chaque cours modifié.';
+        incompleteHint?.removeAttribute('hidden');
+      } else if (missing === 0) {
+        submitButton.disabled = false;
+        if (statusEl)
+          statusEl.textContent = submittedLabel
+            ? `Envoyé le ${submittedLabel} — vous pouvez modifier puis renvoyer.`
+            : 'Livrable complet — vous pouvez l’envoyer.';
+        incompleteHint?.setAttribute('hidden', '');
+      } else {
+        submitButton.disabled = true;
+        if (statusEl)
+          statusEl.textContent = `Complétez les ${missing} champ${missing > 1 ? 's' : ''} restant${missing > 1 ? 's' : ''} (${done}/${totalFields} remplis).`;
+        incompleteHint?.removeAttribute('hidden');
+      }
+    };
+
+    document.addEventListener('input', (e) => {
+      if (e.target instanceof HTMLElement && e.target.closest('form.livrable-form'))
+        refreshSubmitState();
+    });
+    document.addEventListener('change', (e) => {
+      if (e.target instanceof HTMLElement && e.target.closest('form.livrable-form'))
+        refreshSubmitState();
+    });
+    // Fired by each CoursForm after image upload, save and delete.
+    window.addEventListener('livrable:update', refreshSubmitState);
+    refreshSubmitState();
+
+    submitForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (button) button.disabled = true;
-      if (status) status.textContent = 'Envoi en cours…';
+      if (submitButton) submitButton.disabled = true;
+      if (statusEl) statusEl.textContent = 'Envoi en cours…';
       try {
         const res = await fetch('/api/livrable_submit', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ partie_slug: form.dataset.partieSlug }),
+          body: JSON.stringify({ partie_slug: submitForm.dataset.partieSlug }),
         });
         const json = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(json.error || 'Échec de l’envoi.');
-        if (status)
-          status.textContent = `Envoyé le ${new Date(json.submitted_at).toLocaleString('fr-FR')}${json.email_sent ? '' : ' (email coach non configuré — voir logs).'}`;
+        if (statusEl)
+          statusEl.textContent = `Envoyé le ${new Date(json.submitted_at).toLocaleString('fr-FR')}${json.email_sent ? '' : ' (email coach non configuré — voir logs).'}`;
       } catch (err) {
-        if (status) status.textContent = err instanceof Error ? err.message : 'Échec de l’envoi.';
-        if (button) button.disabled = false;
+        if (statusEl)
+          statusEl.textContent = err instanceof Error ? err.message : 'Échec de l’envoi.';
+        refreshSubmitState();
       }
     });
   }
