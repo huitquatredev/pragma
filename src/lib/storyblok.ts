@@ -20,8 +20,6 @@ export interface StoryblokStory {
     temps?: unknown;
     outil?: unknown;
     prerequis?: unknown;
-    question?: unknown;
-    action?: unknown;
     description?: string;
     robots?: string;
     schema?: unknown;
