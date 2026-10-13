@@ -2,8 +2,10 @@ import type { APIRoute } from 'astro';
 import { fetchStory, type StoryblokStory } from '../../lib/storyblok';
 import {
   allFormFields,
+  evaluateDisplays,
   getCoursForm,
   livrableMissingCount,
+  mergePartieAnswers,
   type AnswersByCours,
   type FormSection,
 } from '../../lib/livrables';
@@ -109,7 +111,14 @@ export const POST: APIRoute = async (context) => {
     return json({ error: 'Échec de l’enregistrement de l’envoi.' }, 500);
   }
 
-  // Email coach avec toutes les données.
+  // Email coach avec toutes les données (résultats calculés inclus).
+  const merged = mergePartieAnswers(coursIds, answers);
+  const displayDefs = coursIds.flatMap((id) =>
+    allFormFields(formsByCours[id])
+      .filter((f) => f.kind === 'display' && f.formula)
+      .map((f) => ({ key: f.key, formula: f.formula as string }))
+  );
+  const computed = evaluateDisplays(displayDefs, merged);
   const blocksHtml: string[] = [];
   const blocksText: string[] = [];
   for (const coursId of coursIds) {
@@ -117,7 +126,8 @@ export const POST: APIRoute = async (context) => {
     blocksHtml.push(`<h2>${escapeHtml(titlesByCours[coursId])}</h2>`);
     blocksText.push(`\n## ${titlesByCours[coursId]}\n`);
     for (const field of allFormFields(formsByCours[coursId])) {
-      const raw = String(payload[field.key] ?? '');
+      const raw =
+        field.kind === 'display' ? (computed[field.key] ?? '—') : String(payload[field.key] ?? '');
       const safeLabel = escapeHtml(field.label);
       if (field.kind === 'image' && raw) {
         blocksHtml.push(

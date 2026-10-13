@@ -5,8 +5,8 @@ import CoursForm from '../../../components/app/CoursForm.astro';
 import { fetchStory, type StoryblokStory } from '../../../lib/storyblok';
 import { previewInscription } from '../../../lib/supabase';
 import {
-  allFormFields,
   getCoursForm,
+  inputFields,
   livrableMissingCount,
   type AnswersByCours,
   type FormSection,
@@ -83,9 +83,9 @@ const formsByCours: Record<string, FormSection[]> = Object.fromEntries(
   forms.map((f) => [f.uuid, f.sections])
 );
 const { missing, total } = livrableMissingCount(formsByCours, answers);
-// Required field keys per cours, embedded for the client-side live check.
+// Required INPUT keys per cours (displays are computed, never required).
 const requiredByCours: Record<string, string[]> = Object.fromEntries(
-  forms.map((f) => [f.uuid, allFormFields(f.sections).map((field) => field.key)])
+  forms.map((f) => [f.uuid, inputFields(f.sections).map((field) => field.key)])
 );
 const submittedLabel = submission ? new Date(submission.submitted_at).toLocaleString('fr-FR') : '';
 const hasAccess = Boolean(inscription?.correction);
@@ -166,6 +166,7 @@ const submitReason = isPreview
 </AppLayout>
 
 <script>
+  import { evaluateFormula, formatFormulaValue } from '../../../lib/livrables';
   const submitForm = document.getElementById('livrable-submit');
   if (submitForm) {
     const statusEl = submitForm.querySelector('.livrable-status');
@@ -235,17 +236,42 @@ const submitReason = isPreview
       }
     };
 
+    // Recompute calculated results with values merged across ALL cours
+    // of the partie (DOM order = partie order, later wins — same as server).
+    const refreshDisplays = () => {
+      const merged = {};
+      document.querySelectorAll('form.livrable-form').forEach((scope) => {
+        scope.querySelectorAll('[name]').forEach((el) => {
+          if (el.type === 'file') return;
+          merged[el.getAttribute('name')] = el.value;
+        });
+      });
+      document.querySelectorAll('[data-formula]').forEach((el) => {
+        const computed = evaluateFormula(el.dataset.formula || '', merged);
+        const out = el.querySelector('[data-display-value]');
+        if (out) out.textContent = computed === null ? '—' : formatFormulaValue(computed);
+      });
+    };
+
     document.addEventListener('input', (e) => {
-      if (e.target instanceof HTMLElement && e.target.closest('form.livrable-form'))
+      if (e.target instanceof HTMLElement && e.target.closest('form.livrable-form')) {
         refreshSubmitState();
+        refreshDisplays();
+      }
     });
     document.addEventListener('change', (e) => {
-      if (e.target instanceof HTMLElement && e.target.closest('form.livrable-form'))
+      if (e.target instanceof HTMLElement && e.target.closest('form.livrable-form')) {
         refreshSubmitState();
+        refreshDisplays();
+      }
     });
     // Fired by each CoursForm after image upload, save and delete.
-    window.addEventListener('livrable:update', refreshSubmitState);
+    window.addEventListener('livrable:update', () => {
+      refreshSubmitState();
+      refreshDisplays();
+    });
     refreshSubmitState();
+    refreshDisplays();
 
     submitForm.addEventListener('submit', async (e) => {
       e.preventDefault();

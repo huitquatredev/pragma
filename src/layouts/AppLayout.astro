@@ -14,4 +14,9 @@ const { title } = Astro.props;
     </form>
   </header>
   <slot />
+  <script>
+    // Form interactivity (cours + livrable pages): bundled once, enhances
+    // every `form.livrable-form` via DOM + data-attrs.
+    import '../scripts/livrable-forms.ts';
+  </script>
 </Layout>

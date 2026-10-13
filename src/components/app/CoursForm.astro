@@ -13,7 +13,6 @@ interface Props {
 
 const { coursId, partieId, sections, initial = {}, showDelete = false } = Astro.props;
 const formId = `livrable-form-${coursId}`;
-const statusId = `${formId}-status`;
 
 function str(key: string): string {
   const v = initial[key];
@@ -40,7 +39,17 @@ function str(key: string): string {
           <div class="livrable-field" data-field-key={field.key} data-field-kind={field.kind}>
             <label for={`${formId}-${field.key}`}>{field.label}</label>
             {field.aide && <p class="livrable-aide">{field.aide}</p>}
-            {field.kind === 'text' && (
+            {field.kind === 'text' && field.format === 'url' && (
+              <input
+                id={`${formId}-${field.key}`}
+                name={field.key}
+                type="url"
+                inputmode="url"
+                placeholder={field.placeholder ?? 'https://…'}
+                value={str(field.key)}
+              />
+            )}
+            {field.kind === 'text' && field.format !== 'url' && (
               // NOTE: keep the textarea EMPTY in markup (even Prettier-expanded):
               // any newline/indentation inside would become part of the value.
               // Initial values are set via JS below from `initial`.
@@ -51,17 +60,55 @@ function str(key: string): string {
                 placeholder={field.placeholder ?? ''}
               />
             )}
-            {field.kind === 'number' && (
+            {field.kind === 'number' && field.min !== undefined && field.max !== undefined && (
+              <div class="livrable-range">
+                <div class="livrable-range-labels">
+                  <span>
+                    {field.minLabel ?? field.min}
+                    {field.unite ? ` (${field.unite})` : ''}
+                  </span>
+                  <output id={`${formId}-${field.key}-val`}>
+                    {str(field.key) || String(field.min)}
+                  </output>
+                  <span>
+                    {field.maxLabel ?? field.max}
+                    {field.unite ? ` (${field.unite})` : ''}
+                  </span>
+                </div>
+                <input
+                  id={`${formId}-${field.key}`}
+                  name={field.key}
+                  type="range"
+                  min={field.min}
+                  max={field.max}
+                  step={field.entier === false ? 'any' : 1}
+                  value={str(field.key) || String(field.min)}
+                />
+              </div>
+            )}
+            {field.kind === 'number' && (field.min === undefined || field.max === undefined) && (
               <div class="livrable-number">
                 <input
                   id={`${formId}-${field.key}`}
                   name={field.key}
                   type="number"
                   inputmode="decimal"
+                  step={field.entier === false ? 'any' : 1}
+                  min={field.min}
+                  max={field.max}
                   value={str(field.key)}
                 />
                 {field.unite && <span class="livrable-unite">{field.unite}</span>}
               </div>
+            )}
+            {field.kind === 'display' && (
+              <p
+                class="livrable-result"
+                data-display-key={field.key}
+                data-formula={field.formula ?? ''}>
+                <span data-display-value>—</span>
+                {field.unite && <span class="livrable-unite"> {field.unite}</span>}
+              </p>
             )}
             {field.kind === 'image' && (
               <>
@@ -99,102 +146,14 @@ function str(key: string): string {
         </button>
       )
     }
-    <p id={statusId} class="livrable-status" role="status" aria-live="polite"></p>
+    <p class="livrable-status" role="status" aria-live="polite"></p>
   </div>
 </form>
 
-<script define:vars={{ formId, statusId, initial }}>
-  const form = document.getElementById(formId);
-  const status = document.getElementById(statusId);
-  if (form && status) {
-    // Prefill textareas from saved answers (done in JS so markup
-    // whitespace can never leak into values).
-    form.querySelectorAll('textarea[name]').forEach((el) => {
-      const key = el.getAttribute('name');
-      const value = key ? initial[key] : undefined;
-      if (typeof value === 'string' || typeof value === 'number') el.value = String(value);
-    });
-    const setStatus = (msg, isError = false) => {
-      status.textContent = msg;
-      status.dataset.error = isError ? 'true' : 'false';
-    };
-    // Upload immédiat des captures vers Supabase Storage (bucket livrable-images).
-    form.querySelectorAll('input[type="file"][data-image-input]').forEach((input) => {
-      input.addEventListener('change', async () => {
-        const file = input.files?.[0];
-        if (!file) return;
-        const key = input.getAttribute('data-image-input');
-        const hidden = form.querySelector(`input[type="hidden"][name="${CSS.escape(key)}"]`);
-        setStatus('Envoi de l’image…');
-        try {
-          const body = new FormData();
-          body.append('file', file);
-          body.append('cours_id', form.dataset.coursId ?? '');
-          const res = await fetch('/api/livrable_upload', { method: 'POST', body });
-          const json = await res.json().catch(() => ({}));
-          if (!res.ok) throw new Error(json.error || 'Échec de l’envoi de l’image.');
-          if (hidden) hidden.value = json.url;
-          setStatus('Image envoyée — pensez à Enregistrer.');
-          window.dispatchEvent(new Event('livrable:update'));
-        } catch (e) {
-          setStatus(e instanceof Error ? e.message : 'Échec de l’envoi.', true);
-        }
-      });
-    });
-    form.querySelector('[data-delete]')?.addEventListener('click', async () => {
-      if (!confirm('Supprimer vos réponses pour ce cours ?')) return;
-      setStatus('Suppression…');
-      try {
-        const res = await fetch(
-          `/api/form_answers?cours_id=${encodeURIComponent(form.dataset.coursId ?? '')}`,
-          { method: 'DELETE' }
-        );
-        const json = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(json.error || 'Échec de la suppression.');
-        form
-          .querySelectorAll('textarea, input[type="number"], input[type="hidden"]')
-          .forEach((el) => {
-            el.value = '';
-          });
-        form.querySelectorAll('input[type="file"]').forEach((el) => {
-          el.value = '';
-        });
-        setStatus('Réponses supprimées.');
-        form.dataset.saved = '{}';
-        window.dispatchEvent(new Event('livrable:update'));
-      } catch (e) {
-        setStatus(e instanceof Error ? e.message : 'Échec de la suppression.', true);
-      }
-    });
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      setStatus('Enregistrement…');
-      const payload = {};
-      form
-        .querySelectorAll('textarea[name], input[type="number"][name], input[type="hidden"][name]')
-        .forEach((el) => {
-          const name = el.getAttribute('name');
-          // Trim text edges: indentation/newlines must never be stored as content.
-          payload[name] = el instanceof HTMLTextAreaElement ? el.value.trim() : el.value;
-        });
-      try {
-        const res = await fetch('/api/form_answers', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            cours_id: form.dataset.coursId,
-            partie_id: form.dataset.partieId,
-            payload,
-          }),
-        });
-        const json = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(json.error || 'Échec de l’enregistrement.');
-        setStatus('Enregistré.');
-        form.dataset.saved = JSON.stringify(payload);
-        window.dispatchEvent(new Event('livrable:update'));
-      } catch (err) {
-        setStatus(err instanceof Error ? err.message : 'Échec de l’enregistrement.', true);
-      }
-    });
-  }
-</script>
+{
+  /*
+  Interactivity lives in src/scripts/livrable-forms.ts (bundled once via
+  AppLayout). No `define:vars` script here: those are inlined raw by Astro
+  and must stay import-free — per-instance data comes from data-attrs.
+*/
+}
