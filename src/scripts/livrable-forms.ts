@@ -1,4 +1,4 @@
-import { evaluateFormula, formatFormulaValue } from '../lib/livrables';
+import { evaluateDisplays } from '../lib/livrables';
 
 /**
  * Progressive enhancement for every `form.livrable-form` on the page
@@ -57,15 +57,20 @@ function enhanceForm(form: HTMLFormElement) {
     return values;
   };
 
-  // Recompute calculated results (same-cours values; cross-cours refs
-  // resolve on the livrable page where all answers are merged).
+  // Recompute calculated results, feeding computed displays back in so
+  // chained formulas (display -> display) resolve. Same-cours values only;
+  // cross-cours refs resolve on the livrable page where answers are merged.
   const refreshDisplays = () => {
     const values = scopeValues();
+    const defs = [...form.querySelectorAll('[data-formula]')].map((el) => ({
+      key: (el as HTMLElement).dataset.displayKey ?? '',
+      formula: (el as HTMLElement).dataset.formula ?? '',
+    }));
+    const computed = evaluateDisplays(defs, values);
     form.querySelectorAll('[data-formula]').forEach((el) => {
       if (!(el instanceof HTMLElement)) return;
-      const computed = evaluateFormula(el.dataset.formula || '', values);
       const out = el.querySelector('[data-display-value]');
-      if (out) out.textContent = computed === null ? '—' : formatFormulaValue(computed);
+      if (out) out.textContent = computed[el.dataset.displayKey ?? ''] ?? '—';
     });
   };
 

@@ -56,6 +56,35 @@ function isDoc(doc: unknown): doc is RichDoc {
   return !!d && d.type === 'doc' && Array.isArray(d.content);
 }
 
+function paragraphsToDoc(paragraphs: string[]): RichDoc {
+  return {
+    type: 'doc',
+    content: paragraphs
+      .map((p) => (typeof p === 'string' ? p.trim() : ''))
+      .filter((p) => p.length > 0)
+      .map((p) => ({ type: 'paragraph', content: [{ text: p }] })),
+  };
+}
+
+/**
+ * Coerce loose values into a real doc. Some seeded `form_section.intro`
+ * are plain string arrays instead of Storyblok docs — render them as
+ * paragraphs instead of crashing the resolver.
+ */
+function coerceToDoc(doc: unknown): unknown {
+  if (typeof doc === 'string') return paragraphsToDoc([doc]);
+  if (Array.isArray(doc)) {
+    if (doc.length > 0 && doc.every((item) => typeof item === 'string')) {
+      return paragraphsToDoc(doc as string[]);
+    }
+    if (doc.length > 0 && doc.every((item) => item && typeof item === 'object')) {
+      return { type: 'doc', content: doc };
+    }
+    return { type: 'doc', content: [] };
+  }
+  return doc;
+}
+
 /** Retire le 1er paragraphe s'il n'est que la ligne-marqueur du fichier source. */
 export function withoutLeadMarker(doc: unknown): unknown {
   if (!isDoc(doc) || doc.content!.length === 0) return doc;
@@ -90,7 +119,7 @@ export function withoutInlineLabel(doc: unknown): unknown {
 
 /** Combinaison : marqueur pleine ligne puis label inline. */
 export function cleanRichText(doc: unknown): unknown {
-  return withoutInlineLabel(withoutLeadMarker(doc));
+  return withoutInlineLabel(withoutLeadMarker(coerceToDoc(doc)));
 }
 
 /** Vrai si le doc richtext contient du texte visible (récursif : paragraphes, listes, etc.). */

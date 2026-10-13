@@ -596,8 +596,9 @@ export function extractFormulaRefs(formula: string): string[] {
 }
 
 /**
- * Evaluate a display formula. Returns number|string, or null when any ref is
- * missing/non-numeric or the formula is invalid (renders "—").
+ * Evaluate a display formula. Returns number|string, or null when the formula
+ * is invalid or divides by zero (renders "—"). Missing/empty/non-numeric
+ * refs count as ZERO (spreadsheet semantics), so totals always compute.
  */
 export function evaluateFormula(
   formula: string,
@@ -608,9 +609,7 @@ export function evaluateFormula(
   const refs = extractFormulaRefs(formula);
   const nums = new Map<string, number>();
   for (const r of refs) {
-    const n = toNumber(values[r]);
-    if (n === null) return null;
-    nums.set(r, n);
+    nums.set(r, toNumber(values[r]) ?? 0);
   }
   const parser = new FormulaParser(toks, nums);
   const result = parser.parse();

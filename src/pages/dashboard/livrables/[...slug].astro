@@ -28,7 +28,9 @@ interface CoursFormData {
 }
 
 let forms: CoursFormData[] = [];
-if (!isPreview) {
+{
+  // Form definitions are public CMS content: always load (including preview
+  // mode, so editors and local dev see the forms). Only answers differ.
   const refs: StoryblokStory[] = [
     ...(story.content.modules ?? []).flatMap((m) => m.content?.cours ?? []),
     ...(story.content.cours ?? []),
@@ -107,9 +109,7 @@ const submitReason = isPreview
   <main class="content-shell">
     <p class="eyebrow">LIVRABLE</p>
     <h1>{story.content.title}</h1>
-    <Breadcrumb
-      items={[{ label: 'Dashboard', href: '/dashboard' }, { label: story.content.title }]}
-    />
+    <Breadcrumb items={[{ label: story.content.title }]} />
     {
       submission && (
         <p class="livrable-submitted">
@@ -150,7 +150,7 @@ const submitReason = isPreview
           <p class="livrable-status" role="status" aria-live="polite">
             {submitReason}
           </p>
-          <button type="submit" class="button" disabled={!canSubmit}>
+          <button type="submit" class="button button--accent" disabled={!canSubmit}>
             Envoyer pour relecture
           </button>
           {!hasAccess && <p class="livrable-aide">Bouton désactivé : accès correction requis.</p>}
@@ -166,7 +166,7 @@ const submitReason = isPreview
 </AppLayout>
 
 <script>
-  import { evaluateFormula, formatFormulaValue } from '../../../lib/livrables';
+  import { evaluateDisplays } from '../../../lib/livrables';
   const submitForm = document.getElementById('livrable-submit');
   if (submitForm) {
     const statusEl = submitForm.querySelector('.livrable-status');
@@ -237,7 +237,8 @@ const submitReason = isPreview
     };
 
     // Recompute calculated results with values merged across ALL cours
-    // of the partie (DOM order = partie order, later wins — same as server).
+    // of the partie (DOM order = partie order, later wins — same as server),
+    // feeding computed displays back in for chained formulas.
     const refreshDisplays = () => {
       const merged = {};
       document.querySelectorAll('form.livrable-form').forEach((scope) => {
@@ -246,10 +247,14 @@ const submitReason = isPreview
           merged[el.getAttribute('name')] = el.value;
         });
       });
+      const defs = [...document.querySelectorAll('[data-formula]')].map((el) => ({
+        key: el.dataset.displayKey ?? '',
+        formula: el.dataset.formula ?? '',
+      }));
+      const computed = evaluateDisplays(defs, merged);
       document.querySelectorAll('[data-formula]').forEach((el) => {
-        const computed = evaluateFormula(el.dataset.formula || '', merged);
         const out = el.querySelector('[data-display-value]');
-        if (out) out.textContent = computed === null ? '—' : formatFormulaValue(computed);
+        if (out) out.textContent = computed[el.dataset.displayKey ?? ''] ?? '—';
       });
     };
 
