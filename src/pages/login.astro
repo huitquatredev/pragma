@@ -20,21 +20,23 @@ if (user) {
 
 <Layout seo={{ title: 'Connexion — Pragma Formation', description: 'Connexion par email.' }}>
   <main class="auth-page">
-    <p class="eyebrow">PRAGMA / FORMATION</p>
-    <h1>Votre espace d’apprentissage.</h1>
-    <p>Recevez un lien de connexion sécurisé par email.</p>
-    {
-      error && (
-        <p class="form-error" role="alert">
-          {error}
-        </p>
-      )
-    }
-    <form method="post" action="/auth/login" class="auth-form">
-      <input type="hidden" name="next" value={next} />
-      <label for="email">Adresse email</label>
-      <input id="email" name="email" type="email" autocomplete="email" required />
-      <button class="button" type="submit">Recevoir mon lien</button>
-    </form>
+    <div class="auth-card">
+      <a href="/" class="wordmark" aria-label="Pragma Formation">pragma</a>
+      <h1>Votre espace d’apprentissage.</h1>
+      <p>Recevez un lien de connexion sécurisé par email.</p>
+      {
+        error && (
+          <p class="form-error" role="alert">
+            {error}
+          </p>
+        )
+      }
+      <form method="post" action="/auth/login" class="auth-form">
+        <input type="hidden" name="next" value={next} />
+        <label for="email">Adresse email</label>
+        <input id="email" name="email" type="email" autocomplete="email" required />
+        <button class="button button--accent" type="submit">Recevoir mon lien</button>
+      </form>
+    </div>
   </main>
 </Layout>

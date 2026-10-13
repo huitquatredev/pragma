@@ -34,6 +34,12 @@ const safeSeo = seo || {
 
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="shortcut icon" href="/favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
   <meta name="apple-mobile-web-app-title" content={import.meta.env.SITE_NAME} />
 
   {safeSeo.title && <meta property="og:title" content={safeSeo.title} />}

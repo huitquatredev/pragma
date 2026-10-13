@@ -7,9 +7,10 @@ import { getFirstIncompleteCourse, getProgressIndex } from '../../lib/progress';
 
 const isPreview = process.env.IS_PREVIEW === 'true' || import.meta.env.IS_PREVIEW === 'true';
 const inscription = isPreview ? previewInscription : Astro.locals.inscription;
-const displayName = inscription?.first_name || inscription?.last_name
-  ? [inscription.first_name, inscription.last_name].filter(Boolean).join(' ')
-  : Astro.locals.user?.email ?? '';
+const displayName =
+  inscription?.first_name || inscription?.last_name
+    ? [inscription.first_name, inscription.last_name].filter(Boolean).join(' ')
+    : (Astro.locals.user?.email ?? '');
 const parts = await fetchFormationIndex();
 
 let validatedIds = new Set<string>();
@@ -25,9 +26,7 @@ if (!isPreview && Astro.locals.supabase) {
   }
 }
 
-const nextCourse = inscription
-  ? getFirstIncompleteCourse(parts, validatedIds, inscription)
-  : null;
+const nextCourse = inscription ? getFirstIncompleteCourse(parts, validatedIds, inscription) : null;
 ---
 
 <AppLayout title="Dashboard — Pragma Formation">
@@ -40,7 +39,7 @@ const nextCourse = inscription
     {
       nextCourse && (
         <div class="dashboard-meta">
-          <a class="button" href={`/cours/${nextCourse.slug}`}>
+          <a class="button button--accent" href={`/cours/${nextCourse.slug}`}>
             Aller au prochain cours non validé
           </a>
         </div>

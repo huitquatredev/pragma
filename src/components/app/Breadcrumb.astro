@@ -15,23 +15,26 @@ const { items } = Astro.props;
 
 <nav class="breadcrumb" aria-label="Fil d'Ariane">
   <a href="/dashboard">Dashboard</a>
-  {items.map((item) => {
-    const display = item.number != null && item.level ? `${item.level} ${item.number}` : item.label;
-    return (
-      <>
-        <span class="breadcrumb-sep">/</span>
-        {item.href ? <a href={item.href}>{display}</a> : <span>{display}</span>}
-      </>
-    );
-  })}
+  {
+    items.map((item) => {
+      const display =
+        item.number != null && item.level ? `${item.level} ${item.number}` : item.label;
+      return (
+        <>
+          <span class="breadcrumb-sep">/</span>
+          {item.href ? <a href={item.href}>{display}</a> : <span>{display}</span>}
+        </>
+      );
+    })
+  }
 </nav>
 
 <style>
   .breadcrumb {
-    font: 700 0.75rem/1 Arial, sans-serif;
-    letter-spacing: 0.05em;
+    font: 700 0.75rem/1.4 var(--pg-font);
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #555;
+    color: var(--pg-muted);
     margin-bottom: 2rem;
   }
   .breadcrumb a {

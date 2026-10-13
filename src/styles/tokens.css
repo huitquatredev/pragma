@@ -1,0 +1,45 @@
+/**
+ * PRAGMA DESIGN TOKENS — single source of truth.
+ * Every color, font, radius and shadow site-wide comes from here.
+ * Source: formation brochure (Outfit / navy #08327d / coral #f45844).
+ */
+
+:root {
+  /* Brand */
+  --pg-navy: #08327d;
+  --pg-navy-deep: #061f56;
+  --pg-navy-ink: #0b1e4e;
+  --pg-orange: #f45844;
+  --pg-orange-deep: #d94834;
+  --pg-orange-soft: #ffe9e4;
+
+  /* Surfaces */
+  --pg-bg: #eef0f4;
+  --pg-card: #ffffff;
+  --pg-line: #d8dce6;
+  --pg-muted: #5b6480;
+
+  /* Feedback (used sparingly, always paired with brand) */
+  --pg-success: #1a7f4b;
+  --pg-success-bg: #e2f3e9;
+  --pg-error: #b3261e;
+  --pg-error-bg: #fbe9e7;
+
+  /* Typography */
+  --pg-font: 'Outfit', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --pg-eyebrow-size: 0.78rem;
+  --pg-eyebrow-spacing: 0.16em;
+
+  /* Shape */
+  --pg-radius-sm: 10px;
+  --pg-radius: 20px;
+  --pg-radius-pill: 999px;
+
+  /* Elevation */
+  --pg-shadow-sm: 0 1px 2px rgb(8 50 125 / 0.06);
+  --pg-shadow: 0 12px 32px -12px rgb(8 50 125 / 0.22);
+
+  /* Layout */
+  --pg-shell: 1120px;
+  --pg-gutter: clamp(1.25rem, 4vw, 3rem);
+}
