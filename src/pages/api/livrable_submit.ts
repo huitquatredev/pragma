@@ -10,6 +10,7 @@ import {
   type FormSection,
 } from '../../lib/livrables';
 import { coachEmail, escapeHtml, sendCoachEmail } from '../../lib/email';
+import { stripLevelPrefix } from '../../lib/titres';
 
 export const POST: APIRoute = async (context) => {
   const user = context.locals.user;
@@ -74,7 +75,7 @@ export const POST: APIRoute = async (context) => {
     const sections = getCoursForm(story);
     if (sections.length === 0) continue;
     formsByCours[story.uuid] = sections;
-    titlesByCours[story.uuid] = story.content.title ?? story.slug;
+    titlesByCours[story.uuid] = stripLevelPrefix(story.content.title ?? story.slug);
   }
   const coursIds = Object.keys(formsByCours);
   if (coursIds.length === 0) {
@@ -142,11 +143,12 @@ export const POST: APIRoute = async (context) => {
     }
   }
   const dateFr = new Date(submittedAt).toLocaleString('fr-FR');
+  const partieTitle = stripLevelPrefix(partie.content.title ?? '');
   const emailResult = await sendCoachEmail({
     to: coachEmail(),
-    subject: `[Pragma] Livrable « ${partie.content.title} » — ${user.email} — ${dateFr}`,
-    html: `<p>Livrable <strong>${escapeHtml(partie.content.title ?? '')}</strong> envoyé par ${escapeHtml(user.email ?? '')} le ${escapeHtml(dateFr)}.</p>${blocksHtml.join('\n')}`,
-    text: `Livrable ${partie.content.title} — ${user.email} — ${dateFr}\n${blocksText.join('\n')}`,
+    subject: `[Pragma] Livrable « ${partieTitle} » — ${user.email} — ${dateFr}`,
+    html: `<p>Livrable <strong>${escapeHtml(partieTitle)}</strong> envoyé par ${escapeHtml(user.email ?? '')} le ${escapeHtml(dateFr)}.</p>${blocksHtml.join('\n')}`,
+    text: `Livrable ${partieTitle} — ${user.email} — ${dateFr}\n${blocksText.join('\n')}`,
   });
 
   return json({

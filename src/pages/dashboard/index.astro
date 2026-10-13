@@ -2,8 +2,14 @@
 import AppLayout from '../../layouts/AppLayout.astro';
 import ProgressIndex from '../../components/app/ProgressIndex.astro';
 import { fetchFormationIndex } from '../../lib/storyblok';
+import { stripLevelPrefix, oneBased } from '../../lib/titres';
 import { previewInscription } from '../../lib/supabase';
-import { getFirstIncompleteCourse, getProgressIndex } from '../../lib/progress';
+import {
+  flattenCourses,
+  getFirstIncompleteCourse,
+  getPartStatus,
+  getProgressIndex,
+} from '../../lib/progress';
 
 const isPreview = process.env.IS_PREVIEW === 'true' || import.meta.env.IS_PREVIEW === 'true';
 const inscription = isPreview ? previewInscription : Astro.locals.inscription;
@@ -27,6 +33,30 @@ if (!isPreview && Astro.locals.supabase) {
 }
 
 const nextCourse = inscription ? getFirstIncompleteCourse(parts, validatedIds, inscription) : null;
+const nextCourseTitle = nextCourse ? stripLevelPrefix(nextCourse.content.title) : '';
+const accessibleCourses = inscription ? flattenCourses(parts, inscription) : [];
+const validatedCount = accessibleCourses.filter((c) => validatedIds.has(c.uuid)).length;
+const overall =
+  accessibleCourses.length > 0 ? Math.round((validatedCount / accessibleCourses.length) * 100) : 0;
+
+let submissions = new Map<string, string>();
+if (!isPreview && Astro.locals.supabase && Astro.locals.user) {
+  try {
+    const { data } = await Astro.locals.supabase
+      .from('livrable_submissions')
+      .select('partie_id, submitted_at')
+      .eq('user_id', Astro.locals.user.id);
+    submissions = new Map(
+      ((data ?? []) as { partie_id: string; submitted_at: string }[]).map((s) => [
+        s.partie_id,
+        s.submitted_at,
+      ])
+    );
+  } catch {
+    submissions = new Map();
+  }
+}
+const submittedCount = parts.filter((p) => submissions.has(p.uuid)).length;
 ---
 
 <AppLayout title="Dashboard — Pragma Formation">
@@ -37,30 +67,93 @@ const nextCourse = inscription ? getFirstIncompleteCourse(parts, validatedIds, i
       </h1><p>Votre parcours, en un regard.</p>
     </div>
     {
-      nextCourse && (
-        <div class="dashboard-meta">
+      nextCourse ? (
+        <section class="dash-resume" aria-label="Reprendre">
+          <div>
+            <p class="eyebrow eyebrow--light">À reprendre</p>
+            <p class="dash-resume-title">{nextCourseTitle}</p>
+          </div>
           <a class="button button--accent" href={`/cours/${nextCourse.slug}`}>
-            Aller au prochain cours non validé
+            Continuer le cours
           </a>
-        </div>
+        </section>
+      ) : (
+        overall === 100 &&
+        accessibleCourses.length > 0 && (
+          <section class="dash-resume" aria-label="Parcours terminé">
+            <div>
+              <p class="eyebrow eyebrow--light">Parcours terminé</p>
+              <p class="dash-resume-title">Tous les cours sont validés, bravo.</p>
+            </div>
+          </section>
+        )
       )
     }
-    {inscription && <ProgressIndex {parts} {validatedIds} {inscription} />}
-    <section aria-label="Mes livrables" class="livrables-index">
-      <h2>Mes livrables</h2>
-      <p>Un livrable par partie : retrouvez, modifiez et envoyez vos données.</p>
-      <ul class="content-list">
-        {
-          parts.map((part) => (
-            <li>
-              <a href={`/dashboard/livrables/${part.slug}`}>
-                <span>{part.content.title}</span>
-                <span aria-hidden="true">→</span>
-              </a>
-            </li>
-          ))
-        }
-      </ul>
+    <section class="dash-stats" aria-label="Chiffres clés">
+      <div class="stat-card">
+        <p class="stat-num">{overall}%</p>
+        <p class="stat-label">Progression globale</p>
+        <div class="progress-bar" aria-hidden="true">
+          <span style={`width: ${overall}%`}></span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <p class="stat-num">
+          {validatedCount}<span class="stat-total">/{accessibleCourses.length}</span>
+        </p>
+        <p class="stat-label">Cours validés</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-num">
+          {submittedCount}<span class="stat-total">/{parts.length}</span>
+        </p>
+        <p class="stat-label">Livrables envoyés</p>
+      </div>
     </section>
+    <div class="dash-grid">
+      <section aria-label="Ma formation">
+        <h2 class="dash-section-title">Ma formation</h2>
+        {inscription && <ProgressIndex {parts} {validatedIds} {inscription} />}
+      </section>
+      <section aria-label="Mes livrables">
+        <h2 class="dash-section-title">Mes livrables</h2>
+        <p class="dash-section-intro">
+          Un livrable par partie : retrouvez, modifiez et envoyez vos données.
+        </p>
+        <ul class="content-list">
+          {
+            parts.map((part, partIndex) => {
+              const status = inscription ? getPartStatus(part, validatedIds, inscription) : null;
+              const submittedAt = submissions.get(part.uuid);
+              return (
+                <li>
+                  <a href={`/dashboard/livrables/${part.slug}`}>
+                    <span>
+                      <span class="progress-index-level">Partie {oneBased(partIndex)}</span>
+                      {stripLevelPrefix(part.content.title)}
+                      <span class="livrables-meta">
+                        {status ? `${status.percentage}% du parcours` : ''}
+                        {status && submittedAt ? ' • ' : ''}
+                        {submittedAt
+                          ? `Envoyé le ${new Date(submittedAt).toLocaleDateString('fr-FR')}`
+                          : ''}
+                      </span>
+                    </span>
+                    <span class="livrables-side">
+                      {submittedAt ? (
+                        <span class="pill pill--solid">Envoyé</span>
+                      ) : (
+                        <span class="pill">À compléter</span>
+                      )}
+                      <span aria-hidden="true">→</span>
+                    </span>
+                  </a>
+                </li>
+              );
+            })
+          }
+        </ul>
+      </section>
+    </div>
   </main>
 </AppLayout>

@@ -1,17 +1,17 @@
 ---
 import AppLayout from '../../layouts/AppLayout.astro';
 import Breadcrumb from '../../components/app/Breadcrumb.astro';
+import LockIcon from '../../components/app/LockIcon.astro';
 import ProgressBadge from '../../components/app/ProgressBadge.astro';
 import RichText from '../../components/app/RichText.astro';
 import { cleanRichText, hasRichText } from '../../lib/richtext';
 import { fetchStory, fetchStoriesByComponent, type SectionText } from '../../lib/storyblok';
+import { stripLevelPrefix, oneBased } from '../../lib/titres';
 import { previewInscription } from '../../lib/supabase';
 import { getProgressIndex, hasCourseAccess } from '../../lib/progress';
 
 const isPreview = process.env.IS_PREVIEW === 'true' || import.meta.env.IS_PREVIEW === 'true';
-const story = await fetchStory(`modules/${Astro.params.slug!}`).catch(
-  () => null
-);
+const story = await fetchStory(`modules/${Astro.params.slug!}`).catch(() => null);
 if (!story) {
   return new Response(null, { status: 404, statusText: 'Not found' });
 }
@@ -40,7 +40,9 @@ const moduleIndex = parentPart
 
 const { fetchFormationIndex } = await import('../../lib/storyblok');
 const allParts = await fetchFormationIndex();
-const partNumber = allParts.findIndex((p) => p.uuid === parentPart?.uuid);
+const partNumber = oneBased(allParts.findIndex((p) => p.uuid === parentPart?.uuid));
+const displayTitle = stripLevelPrefix(story.content.title);
+const parentTitle = parentPart ? stripLevelPrefix(parentPart.content.title) : '';
 
 const approche = cleanRichText(story.content.approche);
 const resultat = cleanRichText(story.content.resultat);
@@ -48,23 +50,20 @@ const temps = cleanRichText(story.content.temps);
 const prerequis = cleanRichText(story.content.prerequis);
 
 const hasContext =
-  hasRichText(approche) ||
-  hasRichText(resultat) ||
-  hasRichText(temps) ||
-  hasRichText(prerequis);
+  hasRichText(approche) || hasRichText(resultat) || hasRichText(temps) || hasRichText(prerequis);
 ---
 
-<AppLayout title={`${story.content.title} — Pragma Formation`}>
+<AppLayout title={`${displayTitle} — Pragma Formation`}>
   <main class="content-shell">
     <p class="eyebrow">MODULE {moduleIndex >= 0 ? moduleIndex + 1 : ''}</p><h1>
-      {story.content.title}
+      {displayTitle}
     </h1>
     <Breadcrumb
       items={[
         ...(parentPart
           ? [
               {
-                label: parentPart.content.title,
+                label: parentTitle,
                 href: `/parties/${parentPart.slug}`,
                 level: 'PARTIE',
                 number: partNumber,
@@ -72,7 +71,7 @@ const hasContext =
             ]
           : []),
         {
-          label: story.content.title,
+          label: displayTitle,
           level: 'MODULE',
           number: moduleIndex >= 0 ? moduleIndex + 1 : null,
         },
@@ -148,12 +147,28 @@ const hasContext =
             <li>
               <a href={`/cours/${course.slug}`}>
                 <>
-                  <span>{course.content.title}</span>
+                  <span>{stripLevelPrefix(course.content.title)}</span>
                   <ProgressBadge validated={validatedIds.has(course.uuid)} />
                 </>
               </a>
             </li>
           ))
+      }
+      {
+        inscription &&
+          (story.content.cours ?? [])
+            .filter((c) => c.content && !hasCourseAccess(c, inscription))
+            .map((course) => (
+              <li class="is-locked">
+                <span class="locked-row">
+                  <span>
+                    <LockIcon />
+                    {stripLevelPrefix(course.content.title)}
+                  </span>
+                  <span class="pill">Verrouillé</span>
+                </span>
+              </li>
+            ))
       }
     </ul>
   </main>

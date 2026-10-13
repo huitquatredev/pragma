@@ -11,7 +11,7 @@ export const POST: APIRoute = async (context) => {
   if (!slug || (action !== 'validate' && action !== 'unvalidate')) {
     return new Response('Requête invalide.', { status: 400 });
   }
-  const story = await fetchStory(slug);
+  const story = await fetchStory(`cours/${slug}`);
   const inscription = context.locals.inscription;
   if (inscription && !hasCourseAccess(story, inscription)) {
     return new Response('Accès non autorisé.', { status: 403 });

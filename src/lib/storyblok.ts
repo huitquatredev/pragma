@@ -82,21 +82,28 @@ export async function fetchStory(slug: string) {
   const stories = data.stories as StoryblokStory[];
   if (stories.length) return stories[0];
 
-  // Fallback: search all stories by full_slug or slug ending
-  const { data: all } = await api.get('cdn/stories', { ...opts, per_page: 100 });
-  const allStories = all.stories as StoryblokStory[];
-  const match =
-    allStories.find((s) => s.full_slug === slug) ||
-    allStories.find((s) => s.slug === slug) ||
-    allStories.find((s) => s.full_slug.endsWith(`/${slug}`));
-  if (match) {
-    // Re-fetch by full_slug to get resolved relations
-    try {
-      const { data } = await api.get(`cdn/stories/${match.full_slug}`, opts);
-      return data.story as StoryblokStory;
-    } catch {
-      return match;
+  // Fallback: search all stories by full_slug or slug ending (paginated —
+  // the space holds more than one page of stories).
+  let page = 1;
+  for (;;) {
+    const { data: all } = await api.get('cdn/stories', { ...opts, per_page: 100, page });
+    const allStories = all.stories as StoryblokStory[];
+    if (allStories.length === 0) break;
+    const match =
+      allStories.find((s) => s.full_slug === slug) ||
+      allStories.find((s) => s.slug === slug) ||
+      allStories.find((s) => s.full_slug.endsWith(`/${slug}`));
+    if (match) {
+      // Re-fetch by full_slug to get resolved relations
+      try {
+        const { data } = await api.get(`cdn/stories/${match.full_slug}`, opts);
+        return data.story as StoryblokStory;
+      } catch {
+        return match;
+      }
     }
+    if (allStories.length < 100) break;
+    page += 1;
   }
 
   throw new Error(`Story not found: ${slug}`);

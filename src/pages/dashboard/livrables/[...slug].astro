@@ -3,6 +3,7 @@ import AppLayout from '../../../layouts/AppLayout.astro';
 import Breadcrumb from '../../../components/app/Breadcrumb.astro';
 import CoursForm from '../../../components/app/CoursForm.astro';
 import { fetchStory, type StoryblokStory } from '../../../lib/storyblok';
+import { stripLevelPrefix } from '../../../lib/titres';
 import { previewInscription } from '../../../lib/supabase';
 import {
   getCoursForm,
@@ -48,7 +49,7 @@ let forms: CoursFormData[] = [];
     .map((s) => ({
       uuid: s.uuid,
       slug: s.slug,
-      title: s.content.title ?? s.slug,
+      title: stripLevelPrefix(s.content.title ?? s.slug),
       sections: getCoursForm(s),
     }))
     .filter((f) => f.sections.some((sec) => sec.fields.length > 0));
@@ -85,11 +86,17 @@ const formsByCours: Record<string, FormSection[]> = Object.fromEntries(
   forms.map((f) => [f.uuid, f.sections])
 );
 const { missing, total } = livrableMissingCount(formsByCours, answers);
+// Progression par cours pour les pastilles d'invitation.
+const perCours = forms.map((f) => ({
+  ...f,
+  ...livrableMissingCount({ [f.uuid]: f.sections }, answers),
+}));
 // Required INPUT keys per cours (displays are computed, never required).
 const requiredByCours: Record<string, string[]> = Object.fromEntries(
   forms.map((f) => [f.uuid, inputFields(f.sections).map((field) => field.key)])
 );
 const submittedLabel = submission ? new Date(submission.submitted_at).toLocaleString('fr-FR') : '';
+const displayTitle = stripLevelPrefix(story.content.title);
 const hasAccess = Boolean(inscription?.correction);
 const canSubmit = !isPreview && hasAccess && total > 0 && missing === 0;
 const submitReason = isPreview
@@ -105,11 +112,15 @@ const submitReason = isPreview
           : 'Livrable complet — vous pouvez l’envoyer.';
 ---
 
-<AppLayout title={`Livrable — ${story.content.title} — Pragma Formation`}>
+<AppLayout title={`Livrable — ${displayTitle} — Pragma Formation`}>
   <main class="content-shell">
     <p class="eyebrow">LIVRABLE</p>
-    <h1>{story.content.title}</h1>
-    <Breadcrumb items={[{ label: story.content.title }]} />
+    <h1>{displayTitle}</h1>
+    <Breadcrumb items={[{ label: displayTitle }]} />
+    <p class="livrable-lede">
+      Retrouvez ici toutes vos réponses de la partie, modifiez-les si besoin, puis envoyez le
+      livrable en relecture quand tout est complet.
+    </p>
     {
       submission && (
         <p class="livrable-submitted">
@@ -123,11 +134,21 @@ const submitReason = isPreview
       )
     }
     {
-      forms.map((form) => (
+      perCours.map((form, formIndex) => (
         <section class="livrable-cours" aria-label={form.title}>
-          <h2>
-            <a href={`/cours/${form.slug}`}>{form.title}</a>
-          </h2>
+          <div class="livrable-cours-head">
+            <span class="chip">Cours {formIndex + 1}</span>
+            <h2>
+              <a href={`/cours/${form.slug}`}>{form.title}</a>
+            </h2>
+            {form.missing === 0 ? (
+              <span class="pill pill--solid">Complet</span>
+            ) : (
+              <span class="pill">
+                {form.total - form.missing}/{form.total}
+              </span>
+            )}
+          </div>
           <CoursForm
             coursId={form.uuid}
             partieId={story.uuid}
@@ -147,6 +168,12 @@ const submitReason = isPreview
           data-has-access={hasAccess ? 'true' : 'false'}
           data-submitted-label={submittedLabel}
           data-required={JSON.stringify(requiredByCours)}>
+          <h2 class="livrable-submit-title">Envoyer en relecture</h2>
+          <ol class="livrable-steps">
+            <li>Remplissez tous les champs</li>
+            <li>Enregistrez chaque cours</li>
+            <li>Envoyez le livrable</li>
+          </ol>
           <p class="livrable-status" role="status" aria-live="polite">
             {submitReason}
           </p>

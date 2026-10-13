@@ -21,14 +21,26 @@ function accessibleCourses(cours: StoryblokStory[], inscription: Inscription) {
   return cours.filter((c) => c.content && hasCourseAccess(c, inscription));
 }
 
+/** Accessible/total counts for a possibly-unresolved cours list (teaser-safe). */
+export function countAccessible(
+  cours: unknown,
+  inscription: Inscription
+): { accessible: number; total: number } {
+  const list = (Array.isArray(cours) ? cours : []).filter(
+    (c): c is StoryblokStory => !!c && typeof c === 'object' && !!(c as StoryblokStory).content
+  );
+  return {
+    accessible: list.filter((c) => hasCourseAccess(c, inscription)).length,
+    total: list.length,
+  };
+}
+
 export function getProgressIndex(rows: ProgressRow[]) {
   return new Set(rows.map((row) => row.cours_id));
 }
 
 export function partCourses(part: StoryblokStory, inscription: Inscription) {
-  const fromModules = (part.content.modules ?? []).flatMap(
-    (module) => module.content?.cours ?? []
-  );
+  const fromModules = (part.content.modules ?? []).flatMap((module) => module.content?.cours ?? []);
   const direct = part.content.cours ?? [];
   return accessibleCourses([...fromModules, ...direct], inscription);
 }

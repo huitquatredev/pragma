@@ -1,7 +1,12 @@
 ---
 import AppLayout from '../../layouts/AppLayout.astro';
 import Breadcrumb from '../../components/app/Breadcrumb.astro';
-import { fetchStory, fetchStoriesByComponent, type SectionText, type CoursBlok } from '../../lib/storyblok';
+import {
+  fetchStory,
+  fetchStoriesByComponent,
+  type SectionText,
+  type CoursBlok,
+} from '../../lib/storyblok';
 import { previewInscription } from '../../lib/supabase';
 import { flattenCourses, getProgressIndex, hasCourseAccess } from '../../lib/progress';
 import RichText from '../../components/app/RichText.astro';
@@ -11,11 +16,10 @@ import BlocQuiz from '../../components/storyblok/BlocQuiz.astro';
 import BlocGuide from '../../components/storyblok/BlocGuide.astro';
 import BlocAction from '../../components/storyblok/BlocAction.astro';
 import { getCoursForm, hasForm } from '../../lib/livrables';
+import { stripLevelPrefix, oneBased } from '../../lib/titres';
 
 const isPreview = process.env.IS_PREVIEW === 'true' || import.meta.env.IS_PREVIEW === 'true';
-const story = await fetchStory(`cours/${Astro.params.slug!}`).catch(
-  () => null
-);
+const story = await fetchStory(`cours/${Astro.params.slug!}`).catch(() => null);
 if (!story) {
   return new Response(null, { status: 404, statusText: 'Not found' });
 }
@@ -47,8 +51,9 @@ const validated = validatedIds.has(story.uuid);
 
 const parentPart = parts.find(
   (p) =>
-    (p.content.modules ?? []).some((m) => (m.content?.cours ?? []).some((c) => c.uuid === story.uuid)) ||
-    (p.content.cours ?? []).some((c) => c.uuid === story.uuid)
+    (p.content.modules ?? []).some((m) =>
+      (m.content?.cours ?? []).some((c) => c.uuid === story.uuid)
+    ) || (p.content.cours ?? []).some((c) => c.uuid === story.uuid)
 );
 const parentModule = parentPart
   ? (parentPart.content.modules ?? []).find((m) =>
@@ -65,7 +70,10 @@ const coursIndex = parentModule
 
 const { fetchFormationIndex } = await import('../../lib/storyblok');
 const allParts = await fetchFormationIndex();
-const partNumber = allParts.findIndex((p) => p.uuid === parentPart?.uuid);
+const partNumber = oneBased(allParts.findIndex((p) => p.uuid === parentPart?.uuid));
+const displayTitle = stripLevelPrefix(story.content.title);
+const parentPartTitle = parentPart ? stripLevelPrefix(parentPart.content.title) : '';
+const parentModuleTitle = parentModule ? stripLevelPrefix(parentModule.content.title) : '';
 
 const competence = (story.content as { competence?: string }).competence;
 const enjeuCours = (story.content as { enjeu?: unknown }).enjeu;
@@ -96,15 +104,15 @@ const hasCompetence = typeof competence === 'string' && competence.trim().length
 const cleanEnjeu = cleanRichText(enjeuCours);
 ---
 
-<AppLayout title={`${story.content.title} — Pragma Formation`}>
+<AppLayout title={`${displayTitle} — Pragma Formation`}>
   <main class="content-shell course-page">
-    <p class="eyebrow">COURS</p><h1>{story.content.title}</h1>
+    <p class="eyebrow">COURS</p><h1>{displayTitle}</h1>
     <Breadcrumb
       items={[
         ...(parentPart
           ? [
               {
-                label: parentPart.content.title,
+                label: parentPartTitle,
                 href: `/parties/${parentPart.slug}`,
                 level: 'PARTIE',
                 number: partNumber,
@@ -114,32 +122,36 @@ const cleanEnjeu = cleanRichText(enjeuCours);
         ...(parentModule
           ? [
               {
-                label: parentModule.content.title,
+                label: parentModuleTitle,
                 href: `/modules/${parentModule.slug}`,
                 level: 'MODULE',
                 number: moduleIndex >= 0 ? moduleIndex + 1 : null,
               },
             ]
           : []),
-        { label: story.content.title },
+        { label: displayTitle },
       ]}
     />
-    {hasCompetence && (
-      <div class="section-text">
-        <h2>Compétence clé</h2>
-        <div class="rich-text">
-          <p>{competence}</p>
+    {
+      hasCompetence && (
+        <div class="section-text">
+          <h2>Compétence clé</h2>
+          <div class="rich-text">
+            <p>{competence}</p>
+          </div>
         </div>
-      </div>
-    )}
-    {hasRichText(cleanEnjeu) && (
-      <div class="section-text">
-        <h2>Enjeu</h2>
-        <div class="rich-text">
-          <RichText document={cleanEnjeu} />
+      )
+    }
+    {
+      hasRichText(cleanEnjeu) && (
+        <div class="section-text">
+          <h2>Enjeu</h2>
+          <div class="rich-text">
+            <RichText document={cleanEnjeu} />
+          </div>
         </div>
-      </div>
-    )}
+      )
+    }
     {
       ((story.content.body as CoursBlok[]) ?? []).map((section) => {
         if (section.component === 'bloc_comprendre') return <BlocComprendre blok={section} />;

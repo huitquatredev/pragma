@@ -1,8 +1,15 @@
 ---
 import type { StoryblokStory } from '../../lib/storyblok';
 import type { Inscription } from '../../lib/supabase';
-import { getModuleStatus, getPartStatus } from '../../lib/progress';
+import { stripLevelPrefix, oneBased } from '../../lib/titres';
+import {
+  countAccessible,
+  getModuleStatus,
+  getPartStatus,
+  hasCourseAccess,
+} from '../../lib/progress';
 import ProgressBadge from './ProgressBadge.astro';
+import LockIcon from './LockIcon.astro';
 
 interface Props {
   parts: StoryblokStory[];
@@ -14,25 +21,72 @@ const { parts, validatedIds, inscription } = Astro.props;
 
 <nav aria-label="Progression de la formation" class="progress-index">
   {
-    parts.map((part) => {
+    parts.map((part, partIndex) => {
       const partStatus = getPartStatus(part, validatedIds, inscription);
+      const partNumber = oneBased(partIndex);
+      const partCours = [
+        ...(part.content.modules ?? []).flatMap((m) =>
+          m && typeof m === 'object' && m.content ? (m.content.cours ?? []) : []
+        ),
+        ...(part.content.cours ?? []),
+      ];
+      const partAccess = countAccessible(partCours, inscription);
+      const partLocked = partAccess.total > 0 && partAccess.accessible === 0;
       return (
         <div>
-          <a href={`/parties/${part.slug}`} class="progress-index-part">
-            <span>{part.content.title}</span>
-            <span>
-              {partStatus.percentage}% <ProgressBadge validated={partStatus.validated} />
+          {partLocked ? (
+            <span class="progress-index-part">
+              <span>
+                <span class="progress-index-level">Partie {partNumber}</span>
+                <span class="locked-row">
+                  <span>
+                    <LockIcon />
+                    {stripLevelPrefix(part.content.title)}
+                  </span>
+                </span>
+              </span>
+              <span class="pill">Verrouillé</span>
             </span>
-          </a>
+          ) : (
+            <>
+              <a href={`/parties/${part.slug}`} class="progress-index-part">
+                <span>
+                  <span class="progress-index-level">Partie {partNumber}</span>
+                  {stripLevelPrefix(part.content.title)}
+                </span>
+                <span>
+                  {partStatus.percentage}% <ProgressBadge validated={partStatus.validated} />
+                </span>
+              </a>
+              <div class="progress-bar" aria-hidden="true">
+                <span style={`width: ${partStatus.percentage}%`} />
+              </div>
+            </>
+          )}
           {!partStatus.validated && (
             <ul>
               {(part.content.modules ?? [])
                 .filter((module) => module && typeof module === 'object' && module.content)
-                .map((module) => {
+                .map((module, moduleIndex) => {
                   const status = getModuleStatus(module, validatedIds, inscription);
-                  return (
+                  const access = countAccessible(module.content?.cours, inscription);
+                  const locked = access.total > 0 && access.accessible === 0;
+                  return locked ? (
                     <li>
-                      <a href={`/modules/${module.slug}`}>{module.content.title}</a>
+                      <span class="locked-row">
+                        <span>
+                          <LockIcon />
+                          Module {(moduleIndex ?? 0) + 1} — {stripLevelPrefix(module.content.title)}
+                        </span>
+                        <span class="pill">Verrouillé</span>
+                      </span>
+                    </li>
+                  ) : (
+                    <li>
+                      <a href={`/modules/${module.slug}`}>
+                        <span class="progress-index-level">Module {(moduleIndex ?? 0) + 1}</span>
+                        {stripLevelPrefix(module.content.title)}
+                      </a>
                       <span>
                         {status.percentage}% <ProgressBadge validated={status.validated} />
                       </span>
@@ -42,11 +96,32 @@ const { parts, validatedIds, inscription } = Astro.props;
               {(part.content.modules ?? []).length === 0 &&
                 (part.content.cours ?? [])
                   .filter((course) => course && typeof course === 'object' && course.content)
+                  .filter((course) => hasCourseAccess(course, inscription))
                   .map((course) => (
                     <li>
-                      <a href={`/cours/${course.slug}`}>{course.content.title}</a>
+                      <a href={`/cours/${course.slug}`}>{stripLevelPrefix(course.content.title)}</a>
                       <span>
                         <ProgressBadge validated={validatedIds.has(course.uuid)} />
+                      </span>
+                    </li>
+                  ))}
+              {(part.content.modules ?? []).length === 0 &&
+                (part.content.cours ?? [])
+                  .filter(
+                    (course) =>
+                      course &&
+                      typeof course === 'object' &&
+                      course.content &&
+                      !hasCourseAccess(course, inscription)
+                  )
+                  .map((course) => (
+                    <li>
+                      <span class="locked-row">
+                        <span>
+                          <LockIcon />
+                          {stripLevelPrefix(course.content.title)}
+                        </span>
+                        <span class="pill">Verrouillé</span>
                       </span>
                     </li>
                   ))}
