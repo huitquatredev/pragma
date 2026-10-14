@@ -34,6 +34,15 @@ if (!isPreview && Astro.locals.supabase) {
 
 const nextCourse = inscription ? getFirstIncompleteCourse(parts, validatedIds, inscription) : null;
 const nextCourseTitle = nextCourse ? stripLevelPrefix(nextCourse.content.title) : '';
+// Partie courante : la première avec au moins un cours accessible non validé
+// (les parties entièrement verrouillées sont sautées, mais restent visitables).
+let currentPart = 0;
+if (inscription && parts.length > 0) {
+  const found = parts.findIndex((part) =>
+    flattenCourses([part], inscription).some((c) => !validatedIds.has(c.uuid))
+  );
+  currentPart = found >= 0 ? found : parts.length - 1;
+}
 const accessibleCourses = inscription ? flattenCourses(parts, inscription) : [];
 const validatedCount = accessibleCourses.filter((c) => validatedIds.has(c.uuid)).length;
 const overall =
@@ -113,7 +122,16 @@ const submittedCount = parts.filter((p) => submissions.has(p.uuid)).length;
     <div class="dash-grid">
       <section aria-label="Ma formation">
         <h2 class="dash-section-title">Ma formation</h2>
-        {inscription && <ProgressIndex {parts} {validatedIds} {inscription} />}
+        {
+          inscription && (
+            <ProgressIndex
+              parts={parts}
+              validatedIds={validatedIds}
+              inscription={inscription}
+              current={currentPart}
+            />
+          )
+        }
       </section>
       <section aria-label="Mes livrables">
         <h2 class="dash-section-title">Mes livrables</h2>

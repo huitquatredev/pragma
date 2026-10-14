@@ -15,120 +15,201 @@ interface Props {
   parts: StoryblokStory[];
   validatedIds: Set<string>;
   inscription: Inscription;
+  current?: number;
 }
-const { parts, validatedIds, inscription } = Astro.props;
+const { parts, validatedIds, inscription, current = 0 } = Astro.props;
+const active = parts.length > 0 ? Math.min(Math.max(current, 0), parts.length - 1) : 0;
 ---
 
-<nav aria-label="Progression de la formation" class="progress-index">
+<div class="parties-carousel" data-carousel>
   {
-    parts.map((part, partIndex) => {
-      const partStatus = getPartStatus(part, validatedIds, inscription);
-      const partNumber = oneBased(partIndex);
-      const partCours = [
-        ...(part.content.modules ?? []).flatMap((m) =>
-          m && typeof m === 'object' && m.content ? (m.content.cours ?? []) : []
-        ),
-        ...(part.content.cours ?? []),
-      ];
-      const partAccess = countAccessible(partCours, inscription);
-      const partLocked = partAccess.total > 0 && partAccess.accessible === 0;
-      return (
-        <div>
-          {partLocked ? (
-            <span class="progress-index-part">
-              <span>
-                <span class="progress-index-level">Partie {partNumber}</span>
-                <span class="locked-row">
-                  <span>
-                    <LockIcon />
-                    {stripLevelPrefix(part.content.title)}
-                  </span>
-                </span>
-              </span>
-              <span class="pill">Verrouillé</span>
-            </span>
-          ) : (
-            <>
-              <a href={`/parties/${part.slug}`} class="progress-index-part">
+    parts.length > 1 && (
+      <div class="carousel-nav">
+        <button type="button" class="carousel-btn" data-prev aria-label="Partie précédente">
+          ←
+        </button>
+        <div class="carousel-dots" role="tablist" aria-label="Choisir une partie">
+          {parts.map((part, partIndex) => (
+            <button
+              type="button"
+              class="carousel-dot"
+              data-dot={partIndex}
+              role="tab"
+              aria-selected={partIndex === active ? 'true' : 'false'}
+              aria-label={`Partie ${oneBased(partIndex)} : ${stripLevelPrefix(part.content.title)}`}
+            />
+          ))}
+        </div>
+        <button type="button" class="carousel-btn" data-next aria-label="Partie suivante">
+          →
+        </button>
+      </div>
+    )
+  }
+  <p class="carousel-counter" data-counter aria-live="polite" hidden={parts.length <= 1}>
+    Partie {(active ?? 0) + 1} / {parts.length}
+  </p>
+  <nav aria-label="Progression de la formation" class="progress-index">
+    {
+      parts.map((part, partIndex) => {
+        const partStatus = getPartStatus(part, validatedIds, inscription);
+        const partNumber = oneBased(partIndex);
+        const partCours = [
+          ...(part.content.modules ?? []).flatMap((m) =>
+            m && typeof m === 'object' && m.content ? (m.content.cours ?? []) : []
+          ),
+          ...(part.content.cours ?? []),
+        ];
+        const partAccess = countAccessible(partCours, inscription);
+        const partLocked = partAccess.total > 0 && partAccess.accessible === 0;
+        return (
+          <div class="partie-slide" data-slide hidden={partIndex !== active}>
+            {partLocked ? (
+              <span class="progress-index-part">
                 <span>
                   <span class="progress-index-level">Partie {partNumber}</span>
-                  {stripLevelPrefix(part.content.title)}
+                  <span class="locked-row">
+                    <span>
+                      <LockIcon />
+                      {stripLevelPrefix(part.content.title)}
+                    </span>
+                  </span>
                 </span>
-                <span>
-                  {partStatus.percentage}% <ProgressBadge validated={partStatus.validated} />
-                </span>
-              </a>
-              <div class="progress-bar" aria-hidden="true">
-                <span style={`width: ${partStatus.percentage}%`} />
-              </div>
-            </>
-          )}
-          {!partStatus.validated && (
-            <ul>
-              {(part.content.modules ?? [])
-                .filter((module) => module && typeof module === 'object' && module.content)
-                .map((module, moduleIndex) => {
-                  const status = getModuleStatus(module, validatedIds, inscription);
-                  const access = countAccessible(module.content?.cours, inscription);
-                  const locked = access.total > 0 && access.accessible === 0;
-                  return locked ? (
-                    <li>
-                      <span class="locked-row">
-                        <span>
-                          <LockIcon />
-                          Module {(moduleIndex ?? 0) + 1} — {stripLevelPrefix(module.content.title)}
+                <span class="pill">Verrouillé</span>
+              </span>
+            ) : (
+              <>
+                <a href={`/parties/${part.slug}`} class="progress-index-part">
+                  <span>
+                    <span class="progress-index-level">Partie {partNumber}</span>
+                    {stripLevelPrefix(part.content.title)}
+                  </span>
+                  <span>
+                    {partStatus.percentage}% <ProgressBadge validated={partStatus.validated} />
+                  </span>
+                </a>
+                <div class="progress-bar" aria-hidden="true">
+                  <span style={`width: ${partStatus.percentage}%`} />
+                </div>
+              </>
+            )}
+            {!partStatus.validated && (
+              <ul>
+                {(part.content.modules ?? [])
+                  .filter((module) => module && typeof module === 'object' && module.content)
+                  .map((module, moduleIndex) => {
+                    const status = getModuleStatus(module, validatedIds, inscription);
+                    const access = countAccessible(module.content?.cours, inscription);
+                    const locked = access.total > 0 && access.accessible === 0;
+                    return locked ? (
+                      <li>
+                        <span class="locked-row">
+                          <span>
+                            <LockIcon />
+                            Module {(moduleIndex ?? 0) + 1} —{' '}
+                            {stripLevelPrefix(module.content.title)}
+                          </span>
+                          <span class="pill">Verrouillé</span>
                         </span>
-                        <span class="pill">Verrouillé</span>
-                      </span>
-                    </li>
-                  ) : (
-                    <li>
-                      <a href={`/modules/${module.slug}`}>
-                        <span class="progress-index-level">Module {(moduleIndex ?? 0) + 1}</span>
-                        {stripLevelPrefix(module.content.title)}
-                      </a>
-                      <span>
-                        {status.percentage}% <ProgressBadge validated={status.validated} />
-                      </span>
-                    </li>
-                  );
-                })}
-              {(part.content.modules ?? []).length === 0 &&
-                (part.content.cours ?? [])
-                  .filter((course) => course && typeof course === 'object' && course.content)
-                  .filter((course) => hasCourseAccess(course, inscription))
-                  .map((course) => (
-                    <li>
-                      <a href={`/cours/${course.slug}`}>{stripLevelPrefix(course.content.title)}</a>
-                      <span>
-                        <ProgressBadge validated={validatedIds.has(course.uuid)} />
-                      </span>
-                    </li>
-                  ))}
-              {(part.content.modules ?? []).length === 0 &&
-                (part.content.cours ?? [])
-                  .filter(
-                    (course) =>
-                      course &&
-                      typeof course === 'object' &&
-                      course.content &&
-                      !hasCourseAccess(course, inscription)
-                  )
-                  .map((course) => (
-                    <li>
-                      <span class="locked-row">
+                      </li>
+                    ) : (
+                      <li>
+                        <a href={`/modules/${module.slug}`}>
+                          <span class="progress-index-level">Module {(moduleIndex ?? 0) + 1}</span>
+                          {stripLevelPrefix(module.content.title)}
+                        </a>
                         <span>
-                          <LockIcon />
+                          {status.percentage}% <ProgressBadge validated={status.validated} />
+                        </span>
+                      </li>
+                    );
+                  })}
+                {(part.content.modules ?? []).length === 0 &&
+                  (part.content.cours ?? [])
+                    .filter((course) => course && typeof course === 'object' && course.content)
+                    .filter((course) => hasCourseAccess(course, inscription))
+                    .map((course) => (
+                      <li>
+                        <a href={`/cours/${course.slug}`}>
                           {stripLevelPrefix(course.content.title)}
+                        </a>
+                        <span>
+                          <ProgressBadge validated={validatedIds.has(course.uuid)} />
                         </span>
-                        <span class="pill">Verrouillé</span>
-                      </span>
-                    </li>
-                  ))}
-            </ul>
-          )}
-        </div>
-      );
-    })
-  }
-</nav>
+                      </li>
+                    ))}
+                {(part.content.modules ?? []).length === 0 &&
+                  (part.content.cours ?? [])
+                    .filter(
+                      (course) =>
+                        course &&
+                        typeof course === 'object' &&
+                        course.content &&
+                        !hasCourseAccess(course, inscription)
+                    )
+                    .map((course) => (
+                      <li>
+                        <span class="locked-row">
+                          <span>
+                            <LockIcon />
+                            {stripLevelPrefix(course.content.title)}
+                          </span>
+                          <span class="pill">Verrouillé</span>
+                        </span>
+                      </li>
+                    ))}
+              </ul>
+            )}
+          </div>
+        );
+      })
+    }
+  </nav>
+</div>
+
+<script>
+  document.querySelectorAll('[data-carousel]').forEach((root) => {
+    const slides = [...root.querySelectorAll('[data-slide]')];
+    if (slides.length <= 1) return;
+    const prev = root.querySelector('[data-prev]');
+    const next = root.querySelector('[data-next]');
+    const dots = [...root.querySelectorAll('[data-dot]')];
+    const counter = root.querySelector('[data-counter]');
+    let index = slides.findIndex((s) => !s.hasAttribute('hidden'));
+    if (index < 0) index = 0;
+    const show = (i) => {
+      index = (i + slides.length) % slides.length;
+      slides.forEach((s, k) => {
+        if (k === index) s.removeAttribute('hidden');
+        else s.setAttribute('hidden', '');
+      });
+      dots.forEach((d, k) => d.setAttribute('aria-selected', k === index ? 'true' : 'false'));
+      if (counter) counter.textContent = `Partie ${index + 1} / ${slides.length}`;
+    };
+    prev?.addEventListener('click', () => show(index - 1));
+    next?.addEventListener('click', () => show(index + 1));
+    dots.forEach((d) => d.addEventListener('click', () => show(Number(d.dataset.dot))));
+    // Swipe tactile (horizontal dominant).
+    let startX = 0;
+    let startY = 0;
+    root.addEventListener(
+      'touchstart',
+      (e) => {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+      },
+      { passive: true }
+    );
+    root.addEventListener(
+      'touchend',
+      (e) => {
+        const dx = e.changedTouches[0].clientX - startX;
+        const dy = e.changedTouches[0].clientY - startY;
+        if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+          show(index + (dx < 0 ? 1 : -1));
+        }
+      },
+      { passive: true }
+    );
+  });
+</script>

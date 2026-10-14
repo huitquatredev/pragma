@@ -417,6 +417,21 @@ a {
   gap: 1rem;
   align-items: center;
 }
+.progress-index-part > span:last-child:not(.locked-row),
+.progress-index li > span:not(.locked-row):last-child,
+.content-list a > span:last-child,
+.livrables-side {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+  flex: none;
+}
+.progress-index-part > span:first-child,
+.progress-index li > :first-child,
+.content-list a > span:first-child {
+  min-width: 0;
+}
 .content-list li.is-locked {
   background: var(--pg-card);
   box-shadow: var(--pg-shadow-sm);
@@ -435,6 +450,8 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 0.45em;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 span.progress-index-part {
   cursor: default;
@@ -1001,6 +1018,61 @@ span.progress-index-part {
 }
 .progress-index .progress-bar {
   margin-top: 0.9rem;
+}
+.parties-carousel {
+  touch-action: pan-y;
+}
+.carousel-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.6rem;
+}
+.carousel-btn {
+  flex: none;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--pg-navy);
+  background: var(--pg-card);
+  color: var(--pg-navy);
+  font-size: 1.2rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+.carousel-btn:hover {
+  background: var(--pg-navy);
+  color: #fff;
+}
+.carousel-dots {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.carousel-dot {
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--pg-navy);
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+.carousel-dot[aria-selected='true'] {
+  background: var(--pg-orange);
+  border-color: var(--pg-orange);
+}
+.carousel-counter {
+  text-align: center;
+  font-weight: 700;
+  color: var(--pg-muted);
+  font-size: 0.9rem;
+  margin: 0 0 1rem;
 }
 .dash-grid {
   display: grid;
