@@ -1,10 +1,12 @@
 ---
 import AppLayout from '../../layouts/AppLayout.astro';
+import LockIcon from '../../components/app/LockIcon.astro';
 import ProgressIndex from '../../components/app/ProgressIndex.astro';
 import { fetchFormationIndex } from '../../lib/storyblok';
 import { stripLevelPrefix, oneBased } from '../../lib/titres';
 import { previewInscription } from '../../lib/supabase';
 import {
+  countAccessible,
   flattenCourses,
   getFirstIncompleteCourse,
   getPartStatus,
@@ -66,6 +68,31 @@ if (!isPreview && Astro.locals.supabase && Astro.locals.user) {
   }
 }
 const submittedCount = parts.filter((p) => submissions.has(p.uuid)).length;
+
+function partCoursUuids(part: (typeof parts)[number]) {
+  return [
+    ...(part.content.modules ?? []).flatMap((m) =>
+      m && typeof m === 'object' && m.content ? (m.content.cours ?? []) : []
+    ),
+    ...(part.content.cours ?? []),
+  ];
+}
+function isPartLocked(part: (typeof parts)[number]): boolean {
+  if (!inscription) return false;
+  const access = countAccessible(partCoursUuids(part), inscription);
+  return access.total > 0 && access.accessible === 0;
+}
+// Livrable courant : premier non envoyé (les verrouillés sont sautés sauf
+// s'il ne reste qu'eux) ; tout envoyé -> le dernier.
+let currentLivrable = 0;
+if (parts.length > 0) {
+  const open = parts.findIndex((p) => !submissions.has(p.uuid) && !isPartLocked(p));
+  if (open >= 0) currentLivrable = open;
+  else {
+    const anyOpen = parts.findIndex((p) => !submissions.has(p.uuid));
+    currentLivrable = anyOpen >= 0 ? anyOpen : parts.length - 1;
+  }
+}
 ---
 
 <AppLayout title="Dashboard — Pragma Formation">
@@ -119,59 +146,110 @@ const submittedCount = parts.filter((p) => submissions.has(p.uuid)).length;
         <p class="stat-label">Livrables envoyés</p>
       </div>
     </section>
-    <div class="dash-grid">
-      <section aria-label="Ma formation">
-        <h2 class="dash-section-title">Ma formation</h2>
-        {
-          inscription && (
-            <ProgressIndex
-              parts={parts}
-              validatedIds={validatedIds}
-              inscription={inscription}
-              current={currentPart}
-            />
-          )
-        }
-      </section>
-      <section aria-label="Mes livrables">
-        <h2 class="dash-section-title">Mes livrables</h2>
+    <section aria-label="Ma formation">
+      {
+        inscription && (
+          <ProgressIndex
+            parts={parts}
+            validatedIds={validatedIds}
+            inscription={inscription}
+            current={currentPart}
+            title="Ma formation"
+          />
+        )
+      }
+    </section>
+    <section aria-label="Mes livrables" class="livrables-full">
+      <div class="parties-carousel" data-carousel>
+        <div class="section-head">
+          <h2 class="dash-section-title">Mes livrables</h2>
+          {
+            parts.length > 1 && (
+              <div class="carousel-nav">
+                <button
+                  type="button"
+                  class="carousel-btn"
+                  data-prev
+                  aria-label="Livrable précédent">
+                  ←
+                </button>
+                <div class="carousel-dots" role="tablist" aria-label="Choisir un livrable">
+                  {parts.map((part, partIndex) => (
+                    <button
+                      type="button"
+                      class="carousel-dot"
+                      data-dot={partIndex}
+                      role="tab"
+                      aria-selected={partIndex === currentLivrable ? 'true' : 'false'}
+                      aria-label={`Livrable ${oneBased(partIndex)} : ${stripLevelPrefix(part.content.title)}`}
+                    />
+                  ))}
+                </div>
+                <p
+                  class="carousel-counter"
+                  data-counter
+                  data-counter-label="Livrable"
+                  aria-live="polite">
+                  Livrable {currentLivrable + 1} / {parts.length}
+                </p>
+                <button type="button" class="carousel-btn" data-next aria-label="Livrable suivant">
+                  →
+                </button>
+              </div>
+            )
+          }
+        </div>
         <p class="dash-section-intro">
           Un livrable par partie : retrouvez, modifiez et envoyez vos données.
         </p>
-        <ul class="content-list">
-          {
-            parts.map((part, partIndex) => {
-              const status = inscription ? getPartStatus(part, validatedIds, inscription) : null;
-              const submittedAt = submissions.get(part.uuid);
-              return (
-                <li>
-                  <a href={`/dashboard/livrables/${part.slug}`}>
-                    <span>
-                      <span class="progress-index-level">Partie {oneBased(partIndex)}</span>
-                      {stripLevelPrefix(part.content.title)}
-                      <span class="livrables-meta">
-                        {status ? `${status.percentage}% du parcours` : ''}
-                        {status && submittedAt ? ' • ' : ''}
-                        {submittedAt
-                          ? `Envoyé le ${new Date(submittedAt).toLocaleDateString('fr-FR')}`
-                          : ''}
+        {
+          parts.map((part, partIndex) => {
+            const status = inscription ? getPartStatus(part, validatedIds, inscription) : null;
+            const submittedAt = submissions.get(part.uuid);
+            const locked = isPartLocked(part);
+            return (
+              <div data-slide hidden={partIndex !== currentLivrable}>
+                <ul class="content-list">
+                  <li class={locked ? 'is-locked' : undefined}>
+                    {locked ? (
+                      <span class="locked-row">
+                        <span>
+                          <span class="progress-index-level">Partie {oneBased(partIndex)}</span>
+                          <LockIcon />
+                          {stripLevelPrefix(part.content.title)}
+                        </span>
+                        <span class="pill">Verrouillé</span>
                       </span>
-                    </span>
-                    <span class="livrables-side">
-                      {submittedAt ? (
-                        <span class="pill pill--solid">Envoyé</span>
-                      ) : (
-                        <span class="pill">À compléter</span>
-                      )}
-                      <span aria-hidden="true">→</span>
-                    </span>
-                  </a>
-                </li>
-              );
-            })
-          }
-        </ul>
-      </section>
-    </div>
+                    ) : (
+                      <a href={`/dashboard/livrables/${part.slug}`}>
+                        <span>
+                          <span class="progress-index-level">Partie {oneBased(partIndex)}</span>
+                          {stripLevelPrefix(part.content.title)}
+                          <span class="livrables-meta">
+                            {status ? `${status.percentage}% du parcours` : ''}
+                            {status && submittedAt ? ' • ' : ''}
+                            {submittedAt
+                              ? `Envoyé le ${new Date(submittedAt).toLocaleDateString('fr-FR')}`
+                              : ''}
+                          </span>
+                        </span>
+                        <span class="livrables-side">
+                          {submittedAt ? (
+                            <span class="pill pill--solid">Envoyé</span>
+                          ) : (
+                            <span class="pill">À compléter</span>
+                          )}
+                          <span aria-hidden="true">→</span>
+                        </span>
+                      </a>
+                    )}
+                  </li>
+                </ul>
+              </div>
+            );
+          })
+        }
+      </div>
+    </section>
   </main>
 </AppLayout>

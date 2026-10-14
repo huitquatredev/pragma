@@ -2,7 +2,9 @@
 import AppLayout from '../../../layouts/AppLayout.astro';
 import Breadcrumb from '../../../components/app/Breadcrumb.astro';
 import CoursForm from '../../../components/app/CoursForm.astro';
+import LockIcon from '../../../components/app/LockIcon.astro';
 import { fetchStory, type StoryblokStory } from '../../../lib/storyblok';
+import { hasCourseAccess } from '../../../lib/progress';
 import { stripLevelPrefix } from '../../../lib/titres';
 import { previewInscription } from '../../../lib/supabase';
 import {
@@ -51,9 +53,13 @@ let forms: CoursFormData[] = [];
       slug: s.slug,
       title: stripLevelPrefix(s.content.title ?? s.slug),
       sections: getCoursForm(s),
+      locked: inscription ? !hasCourseAccess(s, inscription) : false,
     }))
     .filter((f) => f.sections.some((sec) => sec.fields.length > 0));
 }
+const visibleForms = forms.filter((f) => !f.locked);
+const hiddenCount = forms.length - visibleForms.length;
+const allLocked = forms.length > 0 && visibleForms.length === 0;
 
 let answers: AnswersByCours = {};
 let submission: { submitted_at: string } | null = null;
@@ -83,17 +89,17 @@ if (!isPreview && Astro.locals.supabase && Astro.locals.user && forms.length > 0
 }
 
 const formsByCours: Record<string, FormSection[]> = Object.fromEntries(
-  forms.map((f) => [f.uuid, f.sections])
+  visibleForms.map((f) => [f.uuid, f.sections])
 );
 const { missing, total } = livrableMissingCount(formsByCours, answers);
 // Progression par cours pour les pastilles d'invitation.
-const perCours = forms.map((f) => ({
+const perCours = visibleForms.map((f) => ({
   ...f,
   ...livrableMissingCount({ [f.uuid]: f.sections }, answers),
 }));
 // Required INPUT keys per cours (displays are computed, never required).
 const requiredByCours: Record<string, string[]> = Object.fromEntries(
-  forms.map((f) => [f.uuid, inputFields(f.sections).map((field) => field.key)])
+  visibleForms.map((f) => [f.uuid, inputFields(f.sections).map((field) => field.key)])
 );
 const submittedLabel = submission ? new Date(submission.submitted_at).toLocaleString('fr-FR') : '';
 const displayTitle = stripLevelPrefix(story.content.title);
@@ -134,6 +140,25 @@ const submitReason = isPreview
       )
     }
     {
+      allLocked && (
+        <div class="livrable-locked" role="note">
+          <p>
+            <LockIcon /> Contenu verrouillé
+          </p>
+          <p>Votre accès ne comprend pas les cours de cette partie pour le moment.</p>
+        </div>
+      )
+    }
+    {
+      hiddenCount > 0 && !allLocked && (
+        <p class="livrable-aide">
+          {hiddenCount} cours de cette partie {hiddenCount > 1 ? 'sont' : 'est'} hors de votre accès
+          et {hiddenCount > 1 ? 'ne sont' : 'n’est'} pas {hiddenCount > 1 ? 'affichés' : 'affiché'}{' '}
+          ici.
+        </p>
+      )
+    }
+    {
       perCours.map((form, formIndex) => (
         <section class="livrable-cours" aria-label={form.title}>
           <div class="livrable-cours-head">
@@ -160,7 +185,7 @@ const submitReason = isPreview
       ))
     }
     {
-      forms.length > 0 && (
+      visibleForms.length > 0 && (
         <form
           id="livrable-submit"
           class="livrable-submit"

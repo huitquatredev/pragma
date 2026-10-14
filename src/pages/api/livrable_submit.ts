@@ -10,6 +10,7 @@ import {
   type FormSection,
 } from '../../lib/livrables';
 import { coachEmail, escapeHtml, sendCoachEmail } from '../../lib/email';
+import { hasCourseAccess } from '../../lib/progress';
 import { stripLevelPrefix } from '../../lib/titres';
 
 export const POST: APIRoute = async (context) => {
@@ -72,6 +73,8 @@ export const POST: APIRoute = async (context) => {
   const titlesByCours: Record<string, string> = {};
   for (const story of stories) {
     if (!story) continue;
+    // Les cours hors accès sont exclus du livrable (ni affichés, ni requis).
+    if (inscription && !hasCourseAccess(story, inscription)) continue;
     const sections = getCoursForm(story);
     if (sections.length === 0) continue;
     formsByCours[story.uuid] = sections;

@@ -16,39 +16,43 @@ interface Props {
   validatedIds: Set<string>;
   inscription: Inscription;
   current?: number;
+  title?: string;
 }
-const { parts, validatedIds, inscription, current = 0 } = Astro.props;
+const { parts, validatedIds, inscription, current = 0, title = 'Ma formation' } = Astro.props;
 const active = parts.length > 0 ? Math.min(Math.max(current, 0), parts.length - 1) : 0;
 ---
 
 <div class="parties-carousel" data-carousel>
-  {
-    parts.length > 1 && (
-      <div class="carousel-nav">
-        <button type="button" class="carousel-btn" data-prev aria-label="Partie précédente">
-          ←
-        </button>
-        <div class="carousel-dots" role="tablist" aria-label="Choisir une partie">
-          {parts.map((part, partIndex) => (
-            <button
-              type="button"
-              class="carousel-dot"
-              data-dot={partIndex}
-              role="tab"
-              aria-selected={partIndex === active ? 'true' : 'false'}
-              aria-label={`Partie ${oneBased(partIndex)} : ${stripLevelPrefix(part.content.title)}`}
-            />
-          ))}
+  <div class="section-head">
+    <h2 class="dash-section-title">{title}</h2>
+    {
+      parts.length > 1 && (
+        <div class="carousel-nav">
+          <button type="button" class="carousel-btn" data-prev aria-label="Partie précédente">
+            ←
+          </button>
+          <div class="carousel-dots" role="tablist" aria-label="Choisir une partie">
+            {parts.map((part, partIndex) => (
+              <button
+                type="button"
+                class="carousel-dot"
+                data-dot={partIndex}
+                role="tab"
+                aria-selected={partIndex === active ? 'true' : 'false'}
+                aria-label={`Partie ${oneBased(partIndex)} : ${stripLevelPrefix(part.content.title)}`}
+              />
+            ))}
+          </div>
+          <p class="carousel-counter" data-counter data-counter-label="Partie" aria-live="polite">
+            Partie {(active ?? 0) + 1} / {parts.length}
+          </p>
+          <button type="button" class="carousel-btn" data-next aria-label="Partie suivante">
+            →
+          </button>
         </div>
-        <button type="button" class="carousel-btn" data-next aria-label="Partie suivante">
-          →
-        </button>
-      </div>
-    )
-  }
-  <p class="carousel-counter" data-counter aria-live="polite" hidden={parts.length <= 1}>
-    Partie {(active ?? 0) + 1} / {parts.length}
-  </p>
+      )
+    }
+  </div>
   <nav aria-label="Progression de la formation" class="progress-index">
     {
       parts.map((part, partIndex) => {
@@ -175,6 +179,7 @@ const active = parts.length > 0 ? Math.min(Math.max(current, 0), parts.length - 
     const next = root.querySelector('[data-next]');
     const dots = [...root.querySelectorAll('[data-dot]')];
     const counter = root.querySelector('[data-counter]');
+    const counterLabel = counter?.dataset.counterLabel || 'Partie';
     let index = slides.findIndex((s) => !s.hasAttribute('hidden'));
     if (index < 0) index = 0;
     const show = (i) => {
@@ -184,7 +189,7 @@ const active = parts.length > 0 ? Math.min(Math.max(current, 0), parts.length - 
         else s.setAttribute('hidden', '');
       });
       dots.forEach((d, k) => d.setAttribute('aria-selected', k === index ? 'true' : 'false'));
-      if (counter) counter.textContent = `Partie ${index + 1} / ${slides.length}`;
+      if (counter) counter.textContent = `${counterLabel} ${index + 1} / ${slides.length}`;
     };
     prev?.addEventListener('click', () => show(index - 1));
     next?.addEventListener('click', () => show(index + 1));
