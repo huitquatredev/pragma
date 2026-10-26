@@ -50,6 +50,7 @@ export default defineConfig({
         bloc_quiz: 'components/storyblok/BlocQuiz',
         bloc_guide: 'components/storyblok/BlocGuide',
         bloc_action: 'components/storyblok/BlocAction',
+        bloc_blueprint: 'components/storyblok/BlocBlueprint',
       },
       enableFallbackComponent: true,
       customFallbackComponent: 'components/storyblok/StoryblokFallback',

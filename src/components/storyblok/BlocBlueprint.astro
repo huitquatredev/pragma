@@ -1,0 +1,15 @@
+---
+import { storyblokEditable } from '@storyblok/astro';
+
+interface Props {
+  blok: {
+    code?: string;
+  };
+}
+
+const { blok } = Astro.props;
+---
+
+<div {...storyblokEditable(blok)} class="bloc-blueprint">
+  {blok.code && <div set:html={blok.code} />}
+</div>
