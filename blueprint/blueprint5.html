@@ -1,0 +1,267 @@
+<div class="blueprint-container">
+  <div class="blueprint-header">
+    <h2>Architecture complète de l'écosystème digital d'acquisition</h2>
+    <p>Avoir une vue d'ensemble des phases du tunnel</p>
+  </div>
+
+  <!-- Le flux horizontal complet et actif -->
+  <div class="blueprint-canvas">
+    <!-- Étape 3 : L'ACQUISITION (Actif - Bleu) -->
+    <div class="step-column step-acquisition">
+      <div class="step-badge badge-acquisition">Étape 3</div>
+      <div class="step-title">Acquisition</div>
+      <div class="step-subtitle">Les Vannes de Trafic</div>
+      <div class="step-preview-box">Réseaux Sociaux</div>
+      <div class="step-preview-box">Blog d'entreprise</div>
+      <div class="step-preview-box">Presse &amp; Newsletter</div>
+    </div>
+
+    <div class="blueprint-arrow-separator">➔</div>
+
+    <!-- Étape 2 : LA CAPTURE (Actif - Orange/Bleu) -->
+    <div class="step-column step-capture">
+      <div class="step-badge badge-capture">Étape 2</div>
+      <div class="step-title">Capture</div>
+      <div class="step-subtitle">Moteur Automatisé</div>
+      <div class="step-preview-box">Quiz Tally (Embed)</div>
+      <div class="step-preview-box">Formulaire Brevo</div>
+      <div class="step-preview-box">Séquences E-mails</div>
+    </div>
+
+    <div class="blueprint-arrow-separator">➔</div>
+
+    <!-- Étape 1 : LA CONVERSION (Actif - Bleu) -->
+    <div class="step-column step-conversion">
+      <div class="step-badge badge-conversion">Étape 1</div>
+      <div class="step-title">Conversion</div>
+      <div class="step-subtitle">Les Fondations</div>
+      <div class="step-preview-box target-box">Landing Page</div>
+      <div class="step-preview-box">Home Page</div>
+      <div class="step-preview-box">Page À Propos</div>
+    </div>
+
+    <div class="blueprint-arrow-separator">➔</div>
+
+    <!-- Étape 4 : L'OPTIMISATION (Actif - Orange) -->
+    <div class="step-column step-optimisation">
+      <div class="step-badge badge-optimisation">Étape 4</div>
+      <div class="step-title">Optimisation</div>
+      <div class="step-subtitle">La Boucle Infinie</div>
+      <div class="step-preview-box">Onboarding Client</div>
+      <div class="step-preview-box">Collecte d'Avis</div>
+      <div class="step-preview-box">Études de cas</div>
+    </div>
+  </div>
+
+  <!-- Boucle de rétroaction globale de la preuve sociale -->
+  <div class="feedback-loop-container">
+    <div class="loop-line"></div>
+    <div class="loop-text">
+      ◀ 🌟 RÉINJECTION DE LA PREUVE SOCIALE (Avis &amp; Témoignages clients alimentent l'Étape 1) ◀
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Structure globale et Typographie */
+  .blueprint-container {
+    font-family:
+      'Outfit',
+      -apple-system,
+      BlinkMacSystemFont,
+      sans-serif;
+    background-color: #fef9f7;
+    color: #0e0e0e;
+    padding: 40px 30px;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(8, 50, 125, 0.06);
+    max-width: 1000px; /* Légèrement élargi pour accueillir proprement les 4 blocs côte à côte */
+    margin: 20px auto;
+    border: 1px solid rgba(8, 50, 125, 0.08);
+    position: relative;
+    box-sizing: border-box;
+  }
+
+  /* En-tête */
+  .blueprint-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .blueprint-header h2 {
+    color: #08327d;
+    margin: 0 0 10px 0;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+  }
+  .blueprint-header p {
+    color: #666;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 400;
+  }
+
+  /* Zone de rendu d'architecture */
+  .blueprint-canvas {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Colonnes génériques (Toutes actives avec fond blanc et ombres fines) */
+  .step-column {
+    flex: 1;
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 20px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 330px;
+    box-sizing: border-box;
+    border: 1px solid rgba(8, 50, 125, 0.12);
+    box-shadow: 0 4px 12px rgba(8, 50, 125, 0.02);
+  }
+
+  /* Identification sémantique des bordures de blocs */
+  .step-acquisition {
+    border-top: 4px solid #08327d;
+  }
+  .step-capture {
+    border-top: 4px solid #f45844;
+  }
+  .step-conversion {
+    border-top: 4px solid #08327d;
+    box-shadow: 0 4px 16px rgba(8, 50, 125, 0.05);
+  }
+  .step-optimisation {
+    border-top: 4px solid #f45844;
+  }
+
+  /* Badges de couleur d'étapes */
+  .step-badge {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    color: #fff;
+  }
+  .badge-acquisition {
+    background-color: #08327d;
+  }
+  .badge-capture {
+    background-color: #f45844;
+  }
+  .badge-conversion {
+    background-color: #08327d;
+  }
+  .badge-optimisation {
+    background-color: #f45844;
+  }
+
+  /* Titrages des colonnes */
+  .step-title {
+    font-weight: 800;
+    font-size: 16px;
+    color: #08327d;
+    margin-bottom: 2px;
+  }
+  .step-subtitle {
+    font-size: 11px;
+    color: #666;
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+
+  /* Boîtes de prévisualisation intérieures */
+  .step-preview-box {
+    width: 100%;
+    background-color: #fef9f7;
+    border: 1px solid rgba(8, 50, 125, 0.06);
+    padding: 10px 6px;
+    text-align: center;
+    font-size: 12px;
+    color: #0e0e0e;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    font-weight: 600;
+    box-sizing: border-box;
+  }
+
+  /* Focus visuel sur la boîte de réception de la preuve sociale */
+  .target-box {
+    border: 1px solid rgba(244, 88, 68, 0.4) !important;
+    background-color: rgba(244, 88, 68, 0.02) !important;
+    color: #08327d !important;
+  }
+
+  /* Séparateurs fléchés du flux */
+  .blueprint-arrow-separator {
+    font-size: 16px;
+    color: rgba(8, 50, 125, 0.2);
+    font-weight: bold;
+    user-select: none;
+  }
+
+  /* BOUCLE DE RÉTROACTION EN BAS DU SCHÉMA */
+  .feedback-loop-container {
+    margin-top: 25px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  /* Tracé courbe liant l'Étape 4 (droite) à l'Étape 1 (centre-droit) */
+  .loop-line {
+    width: 38%;
+    height: 35px;
+    border: 2px dashed #f45844;
+    border-top: none;
+    border-radius: 0 0 24px 24px;
+    position: absolute;
+    top: -25px;
+    left: 54%;
+    z-index: 1;
+    opacity: 0.8;
+  }
+  /* Label textuel de la boucle */
+  .loop-text {
+    font-size: 11px;
+    font-weight: 800;
+    color: #f45844;
+    letter-spacing: 0.5px;
+    margin-top: 15px;
+    background-color: #fef9f7;
+    padding: 2px 10px;
+    z-index: 2;
+    position: relative;
+    text-align: center;
+  }
+
+  /* Responsive Mobile */
+  @media (max-width: 900px) {
+    .blueprint-canvas {
+      flex-direction: column;
+      gap: 15px;
+    }
+    .step-column {
+      width: 100%;
+      min-height: auto;
+    }
+    .blueprint-arrow-separator {
+      transform: rotate(90deg);
+      margin: 2px 0;
+    }
+    .feedback-loop-container {
+      display: none; /* Nettoyage sur mobile */
+    }
+  }
+</style>

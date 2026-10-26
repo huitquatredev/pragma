@@ -1,0 +1,272 @@
+<div class="blueprint-container">
+  <div class="blueprint-header">
+    <h2>Phase Conversion - Écosystème</h2>
+    <p>Construire la destination finale du parcours client.</p>
+  </div>
+
+  <div class="blueprint-canvas">
+    <!-- Étape d'Acquisition (Grisée) -->
+    <div class="step-column step-muted">
+      <div class="step-badge">Étape 3</div>
+      <div class="step-title">Acquisition</div>
+      <div class="step-subtitle">Flux Extérieurs</div>
+      <div class="step-preview-box">Réseaux Sociaux</div>
+      <div class="step-preview-box">Blog d'entreprise</div>
+      <div class="step-preview-box">Presse &amp; Tiers</div>
+    </div>
+
+    <!-- Flèche de liaison -->
+    <div class="blueprint-arrow-separator">➔</div>
+
+    <!-- Étape de Capture (Grisée) -->
+    <div class="step-column step-muted">
+      <div class="step-badge">Étape 2</div>
+      <div class="step-title">Capture</div>
+      <div class="step-subtitle">Moteur Automatisé</div>
+      <div class="step-preview-box">Quiz Tally</div>
+      <div class="step-preview-box">Formulaire Brevo</div>
+      <div class="step-preview-box">Séquences Mails</div>
+    </div>
+
+    <!-- Flèche de liaison -->
+    <div class="blueprint-arrow-separator">➔</div>
+
+    <!-- Étape 1 : LES FONDATIONS (Active) -->
+    <div class="step-column step-active">
+      <div class="step-badge badge-highlight">Étape 1</div>
+      <div class="step-title title-highlight">Les Fondations</div>
+      <div class="step-subtitle subtitle-active">Le Cœur Commercial</div>
+
+      <div class="component-card">
+        <span class="card-letter">A</span>
+        <div class="card-details">
+          <strong>Home Page</strong>
+          <span>La gare de triage de ton écosystème</span>
+        </div>
+      </div>
+
+      <div class="inner-arrow">▼</div>
+
+      <div class="component-card">
+        <span class="card-letter">B</span>
+        <div class="card-details">
+          <strong>Page À Propos</strong>
+          <span>Singularité de marque et crédibilité</span>
+        </div>
+      </div>
+
+      <div class="inner-arrow">▼</div>
+
+      <div class="component-card">
+        <span class="card-letter">C</span>
+        <div class="card-details">
+          <strong>Landing Page</strong>
+          <span>Présentation de l'offre et conversion</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Intégration de la typographie Outfit et structure globale */
+  .blueprint-container {
+    font-family:
+      'Outfit',
+      -apple-system,
+      BlinkMacSystemFont,
+      sans-serif;
+    background-color: #fef9f7;
+    color: #0e0e0e;
+    padding: 40px 30px;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(8, 50, 125, 0.04);
+    max-width: 900px;
+    margin: 20px auto;
+    border: 1px solid rgba(8, 50, 125, 0.08);
+  }
+
+  /* En-tête mis à jour */
+  .blueprint-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .blueprint-header h2 {
+    color: #08327d;
+    margin: 0 0 10px 0;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+  .blueprint-header p {
+    color: #666;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 400;
+  }
+
+  /* Espace de travail de l'architecture */
+  .blueprint-canvas {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+  }
+
+  /* Colonnes génériques du plan */
+  .step-column {
+    flex: 1;
+    border-radius: 12px;
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 400px;
+    box-sizing: border-box;
+  }
+
+  /* Style des modules grisés en arrière-plan */
+  .step-muted {
+    background-color: rgba(14, 14, 14, 0.01);
+    border: 1px dashed rgba(14, 14, 14, 0.12);
+    opacity: 0.4;
+  }
+  .step-muted .step-badge {
+    background-color: rgba(14, 14, 14, 0.08);
+    color: #666;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+  .step-muted .step-title {
+    font-weight: 700;
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 4px;
+  }
+  .step-muted .step-subtitle {
+    font-size: 13px;
+    color: #777;
+    margin-bottom: 25px;
+  }
+  .step-preview-box {
+    width: 100%;
+    background-color: #fff;
+    border: 1px solid rgba(14, 14, 14, 0.05);
+    padding: 12px;
+    text-align: center;
+    font-size: 13px;
+    color: #888;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+
+  /* Séparateurs fléchés du flux horizontal */
+  .blueprint-arrow-separator {
+    font-size: 24px;
+    color: rgba(8, 50, 125, 0.15);
+    font-weight: bold;
+    user-select: none;
+  }
+
+  /* Style du bloc actif (Les Fondations) */
+  .step-active {
+    background-color: #fff;
+    border: 2px solid #08327d;
+    box-shadow: 0 12px 32px rgba(8, 50, 125, 0.1);
+    position: relative;
+  }
+  .badge-highlight {
+    background-color: #f45844;
+    color: #fff;
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .title-highlight {
+    color: #08327d !important;
+    font-size: 20px !important;
+    font-weight: 800 !important;
+    margin-bottom: 4px;
+  }
+  .subtitle-active {
+    font-size: 13px;
+    color: #f45844;
+    font-weight: 700;
+    margin-bottom: 25px;
+  }
+
+  /* Cartes intérieures (Composants fixes) */
+  .component-card {
+    width: 100%;
+    background-color: #fef9f7;
+    border: 1px solid rgba(8, 50, 125, 0.12);
+    border-radius: 10px;
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-align: left;
+    box-sizing: border-box;
+  }
+  .card-letter {
+    background-color: #08327d;
+    color: #fff;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .card-details {
+    display: flex;
+    flex-direction: column;
+  }
+  .card-details strong {
+    font-size: 15px;
+    color: #0e0e0e;
+    margin-bottom: 2px;
+    font-weight: 700;
+  }
+  .card-details span {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.3;
+  }
+
+  /* Flèches de flux de haut en bas */
+  .inner-arrow {
+    color: #f45844;
+    font-size: 14px;
+    margin: 8px 0;
+    font-weight: bold;
+    user-select: none;
+  }
+
+  /* Version mobile responsive */
+  @media (max-width: 768px) {
+    .blueprint-canvas {
+      flex-direction: column;
+      gap: 20px;
+    }
+    .step-column {
+      width: 100%;
+      min-height: auto;
+    }
+    .blueprint-arrow-separator {
+      transform: rotate(90deg);
+      margin: 5px 0;
+    }
+  }
+</style>

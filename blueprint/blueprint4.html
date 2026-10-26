@@ -1,0 +1,325 @@
+<div class="blueprint-container">
+  <div class="blueprint-header">
+    <h2>Phase Optimisation - Écosystème</h2>
+    <p>Injecter la satisfaction client dans la phase de conversion.</p>
+  </div>
+
+  <!-- Le flux horizontal principal -->
+  <div class="blueprint-canvas">
+    <!-- Étape 3 : Acquisition (Grisée) -->
+    <div class="step-column step-muted">
+      <div class="step-badge">Étape 3</div>
+      <div class="step-title">Acquisition</div>
+      <div class="step-subtitle">Flux Extérieurs</div>
+      <div class="step-preview-box">Réseaux Sociaux</div>
+      <div class="step-preview-box">Blog d'entreprise</div>
+    </div>
+
+    <div class="blueprint-arrow-separator">➔</div>
+
+    <!-- Étape 2 : Capture (Grisée) -->
+    <div class="step-column step-muted">
+      <div class="step-badge">Étape 2</div>
+      <div class="step-title">Capture</div>
+      <div class="step-subtitle">Moteur Automatisé</div>
+      <div class="step-preview-box">Quiz Tally</div>
+      <div class="step-preview-box">Séquences Mails</div>
+    </div>
+
+    <div class="blueprint-arrow-separator">➔</div>
+
+    <!-- Étape 1 : Conversion (Grisée mais réceptrice de la boucle) -->
+    <div class="step-column step-muted target-anchor">
+      <div class="step-badge">Étape 1</div>
+      <div class="step-title">Conversion</div>
+      <div class="step-subtitle">Les Fondations</div>
+      <div class="step-preview-box highlight-border">Landing Page</div>
+      <div class="step-preview-box">Home &amp; À Propos</div>
+    </div>
+
+    <div class="blueprint-arrow-separator">➔</div>
+
+    <!-- Étape 4 : L'OPTIMISATION (Mise en avant - Active) -->
+    <div class="step-column step-active">
+      <div class="step-badge badge-highlight">Étape 4</div>
+      <div class="step-title title-highlight">Optimisation</div>
+      <div class="step-subtitle subtitle-active">La Boucle Infinie</div>
+
+      <!-- Composant 1 -->
+      <div class="component-card">
+        <span class="card-letter">1</span>
+        <div class="card-details">
+          <strong>Onboarding Client</strong>
+          <span>Séquence d'accueil immédiate (J+0)</span>
+        </div>
+      </div>
+
+      <div class="inner-arrow">▼</div>
+
+      <!-- Composant 2 -->
+      <div class="component-card">
+        <span class="card-letter">2</span>
+        <div class="card-details">
+          <strong>Collecte d'Avis</strong>
+          <span>Scénario Brevo temporisé (J+30)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- La Boucle de Rétroaction en CSS (Preuve Sociale) -->
+  <div class="feedback-loop-container">
+    <div class="loop-line"></div>
+    <div class="loop-text">◀ 🌟 RÉINJECTION DE LA PREUVE SOCIALE (Avis &amp; Témoignages) ◀</div>
+  </div>
+</div>
+
+<style>
+  /* Structure globale et Typographie */
+  .blueprint-container {
+    font-family:
+      'Outfit',
+      -apple-system,
+      BlinkMacSystemFont,
+      sans-serif;
+    background-color: #fef9f7;
+    color: #0e0e0e;
+    padding: 40px 30px;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(8, 50, 125, 0.04);
+    max-width: 900px;
+    margin: 20px auto;
+    border: 1px solid rgba(8, 50, 125, 0.08);
+    position: relative;
+  }
+
+  /* En-tête */
+  .blueprint-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .blueprint-header h2 {
+    color: #08327d;
+    margin: 0 0 10px 0;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+  .blueprint-header p {
+    color: #666;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 400;
+  }
+
+  /* Zone de rendu */
+  .blueprint-canvas {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Colonnes génériques */
+  .step-column {
+    flex: 1;
+    border-radius: 12px;
+    padding: 20px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 360px;
+    box-sizing: border-box;
+  }
+
+  /* Modules grisés */
+  .step-muted {
+    background-color: rgba(14, 14, 14, 0.01);
+    border: 1px dashed rgba(14, 14, 14, 0.12);
+    opacity: 0.35;
+  }
+  .step-muted .step-badge {
+    background-color: rgba(14, 14, 14, 0.08);
+    color: #666;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  .step-muted .step-title {
+    font-weight: 700;
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 4px;
+  }
+  .step-muted .step-subtitle {
+    font-size: 12px;
+    color: #777;
+    margin-bottom: 20px;
+  }
+  .step-preview-box {
+    width: 100%;
+    background-color: #fff;
+    border: 1px solid rgba(14, 14, 14, 0.04);
+    padding: 10px;
+    text-align: center;
+    font-size: 12px;
+    color: #888;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  /* Ancre de réception de la preuve sociale */
+  .highlight-border {
+    border: 1px solid rgba(244, 88, 68, 0.4) !important;
+    background-color: rgba(244, 88, 68, 0.02) !important;
+    color: #08327d !important;
+  }
+
+  /* Séparateurs fléchés horizontaux */
+  .blueprint-arrow-separator {
+    font-size: 20px;
+    color: rgba(8, 50, 125, 0.1);
+    font-weight: bold;
+    user-select: none;
+  }
+
+  /* STYLE DU BLOC ACTIF (OPTIMISATION) */
+  .step-active {
+    background-color: #fff;
+    border: 2px solid #08327d;
+    box-shadow: 0 12px 32px rgba(8, 50, 125, 0.1);
+  }
+  .badge-highlight {
+    background-color: #f45844;
+    color: #fff;
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .title-highlight {
+    color: #08327d !important;
+    font-size: 18px !important;
+    font-weight: 800 !important;
+    margin-bottom: 4px;
+  }
+  .subtitle-active {
+    font-size: 12px;
+    color: #f45844;
+    font-weight: 700;
+    margin-bottom: 25px;
+  }
+
+  /* Cartes intérieures (Onboarding / Avis) */
+  .component-card {
+    width: 100%;
+    background-color: #fef9f7;
+    border: 1px solid rgba(8, 50, 125, 0.12);
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-align: left;
+    box-sizing: border-box;
+  }
+  .card-letter {
+    background-color: #08327d;
+    color: #fff;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  .card-details {
+    display: flex;
+    flex-direction: column;
+  }
+  .card-details strong {
+    font-size: 14px;
+    color: #0e0e0e;
+    margin-bottom: 2px;
+    font-weight: 700;
+  }
+  .card-details span {
+    font-size: 11px;
+    color: #666;
+    line-height: 1.3;
+  }
+
+  /* Flèche descendante interne */
+  .inner-arrow {
+    color: #f45844;
+    font-size: 14px;
+    margin: 6px 0;
+    font-weight: bold;
+    user-select: none;
+  }
+
+  /* DESIGN PROPRE DE LA BOUCLE DE RETROACTION */
+  .feedback-loop-container {
+    margin-top: 25px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  /* La ligne courbe en U inversé passant sous les colonnes 1 et 4 */
+  .loop-line {
+    width: 63%;
+    height: 35px;
+    border: 2px dashed #f45844;
+    border-top: none;
+    border-radius: 0 0 24px 24px;
+    position: absolute;
+    top: -25px;
+    left: 45%;
+    z-index: 1;
+    opacity: 0.8;
+  }
+  /* Le texte descriptif de la boucle */
+  .loop-text {
+    font-size: 11px;
+    font-weight: 800;
+    color: #f45844;
+    letter-spacing: 1px;
+    margin-top: 15px;
+    background-color: #fef9f7;
+    padding: 2px 12px;
+    z-index: 2;
+    position: relative;
+  }
+
+  /* Responsive mobile */
+  @media (max-width: 768px) {
+    .blueprint-canvas {
+      flex-direction: column;
+      gap: 20px;
+    }
+    .step-column {
+      width: 100%;
+      min-height: auto;
+    }
+    .blueprint-arrow-separator {
+      transform: rotate(90deg);
+      margin: 5px 0;
+    }
+    .feedback-loop-container {
+      display: none; /* Masqué sur mobile pour éviter les chevauchements */
+    }
+  }
+</style>
