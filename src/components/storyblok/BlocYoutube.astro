@@ -1,0 +1,129 @@
+---
+import { storyblokEditable } from '@storyblok/astro';
+
+interface Props {
+  blok: {
+    url?: string;
+    title?: string;
+  };
+}
+
+const { blok } = Astro.props;
+
+function getYouTubeId(url?: string): string | null {
+  if (!url) return null;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  return match && match[2].length === 11 ? match[2] : null;
+}
+
+const videoId = getYouTubeId(blok.url);
+const posterUrl = videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : '';
+---
+
+<div {...storyblokEditable(blok)} class="bloc-youtube">
+  {videoId ? (
+    <div class="youtube-lite" data-video-id={videoId}>
+      <button type="button" class="youtube-play-btn" aria-label="Lire la vidéo">
+        <img src={posterUrl} alt={blok.title || "Vidéo YouTube"} loading="lazy" />
+        <span class="play-icon" aria-hidden="true">
+          <svg viewBox="0 0 68 48" width="100%" height="100%">
+            <path d="M66.52,7.74c-0.78-2.93-2.49-5.41-5.42-6.19C55.79,.13,34,0.13,34,0.13s-21.79,0-27.1,1.41c-2.93,0.78-4.64,3.26-5.42,6.19C0.06,13.05,0,24,0,24s0.06,10.95,1.48,16.26c0.78,2.93,2.49,5.41,5.42,6.19C12.21,47.87,34,47.87,34,47.87s21.79,0,27.1-1.41c2.93-0.78,4.64-3.26,5.42-6.19C67.94,34.95,68,24,68,24s-0.06-10.95-1.48-16.26z" fill="#f00"></path>
+            <path d="M 45,24 27,14 27,34 Z" fill="#fff"></path>
+          </svg>
+        </span>
+      </button>
+    </div>
+  ) : (
+    <p class="youtube-error">URL YouTube invalide</p>
+  )}
+</div>
+
+<style>
+  .bloc-youtube {
+    margin: 2rem 0;
+    border-radius: var(--pg-radius);
+    overflow: hidden;
+    background: var(--pg-card);
+    border: 1px solid var(--pg-line);
+    box-shadow: var(--pg-shadow-sm);
+  }
+  .youtube-lite {
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+    cursor: pointer;
+    background-color: #000;
+  }
+  .youtube-play-btn {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    padding: 0;
+    background: none;
+    cursor: pointer;
+  }
+  .youtube-play-btn img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .play-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 68px;
+    height: 48px;
+    transition: transform 0.2s ease;
+  }
+  .youtube-play-btn:hover .play-icon {
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  .youtube-error {
+    color: var(--pg-error);
+    padding: 1rem;
+    margin: 0;
+    font-weight: 600;
+  }
+</style>
+
+<script>
+  function initYouTubeEmbeds() {
+    document.querySelectorAll('.youtube-lite').forEach((el) => {
+      if (el.dataset.initialized) return;
+      el.dataset.initialized = 'true';
+      const videoId = el.dataset.videoId;
+      const btn = el.querySelector('.youtube-play-btn');
+      if (!btn || !videoId) return;
+
+      btn.addEventListener('click', () => {
+        const iframe = document.createElement('iframe');
+        iframe.setAttribute('src', `https://www.youtube-embed.webp/embed/${videoId}?autoplay=1`);
+        iframe.setAttribute('src', `https://www.youtube.com/embed/${videoId}?autoplay=1`);
+        iframe.setAttribute('title', 'YouTube video player');
+        iframe.setAttribute('frameborder', '0');
+        iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+        iframe.setAttribute('allowfullscreen', 'true');
+        iframe.style.position = 'absolute';
+        iframe.style.top = '0';
+        iframe.style.left = '0';
+        iframe.style.width = '100%';
+        iframe.style.height = '100%';
+        el.innerHTML = '';
+        el.appendChild(iframe);
+      });
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initYouTubeEmbeds);
+  } else {
+    initYouTubeEmbeds();
+  }
+  document.addEventListener('astro:page-load', initYouTubeEmbeds);
+</script>

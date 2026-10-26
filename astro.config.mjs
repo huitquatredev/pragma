@@ -51,6 +51,7 @@ export default defineConfig({
         bloc_guide: 'components/storyblok/BlocGuide',
         bloc_action: 'components/storyblok/BlocAction',
         bloc_blueprint: 'components/storyblok/BlocBlueprint',
+        bloc_youtube: 'components/storyblok/BlocYoutube',
       },
       enableFallbackComponent: true,
       customFallbackComponent: 'components/storyblok/StoryblokFallback',

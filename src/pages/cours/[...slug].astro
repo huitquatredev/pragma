@@ -16,6 +16,7 @@ import BlocQuiz from '../../components/storyblok/BlocQuiz.astro';
 import BlocGuide from '../../components/storyblok/BlocGuide.astro';
 import BlocAction from '../../components/storyblok/BlocAction.astro';
 import BlocBlueprint from '../../components/storyblok/BlocBlueprint.astro';
+import BlocYoutube from '../../components/storyblok/BlocYoutube.astro';
 import { getCoursForm, hasForm } from '../../lib/livrables';
 import { stripLevelPrefix, oneBased } from '../../lib/titres';
 
@@ -159,6 +160,7 @@ const cleanEnjeu = cleanRichText(enjeuCours);
         if (section.component === 'bloc_quiz') return <BlocQuiz blok={section} />;
         if (section.component === 'bloc_guide') return <BlocGuide blok={section} />;
         if (section.component === 'bloc_blueprint') return <BlocBlueprint blok={section} />;
+        if (section.component === 'bloc_youtube') return <BlocYoutube blok={section} />;
         if (section.component === 'bloc_action')
           return (
             <BlocAction
