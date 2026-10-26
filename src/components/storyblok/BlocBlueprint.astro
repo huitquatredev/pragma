@@ -11,5 +11,18 @@ const { blok } = Astro.props;
 ---
 
 <div {...storyblokEditable(blok)} class="bloc-blueprint">
-  {blok.code && <div set:html={blok.code} />}
+  {blok.code && <Fragment set:html={blok.code} />}
 </div>
+
+<style>
+  .bloc-blueprint {
+    width: 100%;
+    overflow-x: auto;
+    margin: 2rem 0;
+  }
+  .bloc-blueprint :global(.blueprint-container) {
+    max-width: 100% !important;
+    box-sizing: border-box;
+  }
+</style>
+
