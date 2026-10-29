@@ -1,0 +1,108 @@
+---
+import { storyblokEditable } from '@storyblok/astro';
+
+interface Props {
+  blok: any;
+}
+
+const { blok } = Astro.props;
+const variant = blok.variant || 'steps';
+const cards = blok.cards ?? [];
+---
+
+<section
+  class="mk-section"
+  id={blok.anchor || undefined}
+  {...storyblokEditable(blok)}
+  aria-labelledby={`${blok.anchor || 'cards'}-title`}>
+  {
+    variant === 'principles' ? (
+      <div class="mk-split">
+        <div>
+          {blok.eyebrow && <p class="eyebrow">{blok.eyebrow}</p>}
+          <h2 id={`${blok.anchor || 'cards'}-title`}>{blok.title}</h2>
+        </div>
+        {blok.intro && <p class="mk-lede">{blok.intro}</p>}
+      </div>
+    ) : (
+      <>
+        {blok.eyebrow && <p class="eyebrow">{blok.eyebrow}</p>}
+        <h2 id={`${blok.anchor || 'cards'}-title`}>{blok.title}</h2>
+        {blok.intro && <p class="mk-lede">{blok.intro}</p>}
+      </>
+    )
+  }
+
+  {
+    variant === 'steps' && (
+      <ol class="mk-steps">
+        {cards.map((card: any, index: number) => (
+          <li class="mk-step" {...storyblokEditable(card)}>
+            <span class="mk-step__num">{card.number || String(index + 1).padStart(2, '0')}</span>
+            <h3>{card.title}</h3>
+            <p>{card.text}</p>
+          </li>
+        ))}
+      </ol>
+    )
+  }
+
+  {
+    variant === 'principles' && (
+      <div class="principles-grid">
+        {cards.map((card: any, index: number) => (
+          <article class="principle" {...storyblokEditable(card)}>
+            <span class="principle__num">{card.number || String(index + 1).padStart(2, '0')}</span>
+            <h3>{card.title}</h3>
+            <p>{card.text}</p>
+          </article>
+        ))}
+      </div>
+    )
+  }
+
+  {
+    variant === 'quotes' && (
+      <div class="mk-quotes">
+        {cards.map((card: any) => (
+          <figure class="mk-quote" {...storyblokEditable(card)}>
+            <blockquote>« {card.quote} »</blockquote>
+            {card.result && <p class="mk-quote__result">{card.result}</p>}
+            <figcaption>
+              <strong>{card.name}</strong>
+              <span>{card.role}</span>
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+    )
+  }
+
+  {
+    variant === 'objections' && (
+      <div class="mk-objections">
+        {cards.map((card: any) => (
+          <article
+            class:list={['mk-objection', card.proof && 'mk-objection--proof']}
+            {...storyblokEditable(card)}>
+            <h3>{card.title}</h3>
+            <p>{card.text}</p>
+            {card.quote && <blockquote>{card.quote}</blockquote>}
+          </article>
+        ))}
+      </div>
+    )
+  }
+
+  {
+    blok.quote && (
+      <figure class="prog-quote">
+        <blockquote>« {blok.quote} »</blockquote>
+        <figcaption>
+          <strong>{blok.quote_name}</strong>
+          <span>{blok.quote_role}</span>
+        </figcaption>
+      </figure>
+    )
+  }
+</section>

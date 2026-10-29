@@ -1,0 +1,50 @@
+---
+import VitrinePage from '../components/vitrine/VitrinePage.astro';
+import MarketingLayout from '../layouts/MarketingLayout.astro';
+import { fetchStory } from '../lib/storyblok';
+
+Astro.response.status = 404;
+
+let story;
+try {
+  story = await fetchStory('404');
+} catch {
+  story = null;
+}
+---
+
+{
+  story ? (
+    <VitrinePage story={story} robots="noindex" />
+  ) : (
+    <MarketingLayout
+      title="Page introuvable — Pragma"
+      description="Cette page n’existe pas ou a été déplacée."
+      robots="noindex">
+      <div class="marketing-shell">
+        <section class="notfound">
+          <div>
+            <p class="eyebrow">Erreur 404</p>
+            <h1>Cette page n’a pas suivi le plan.</h1>
+            <p class="notfound__lede">
+              Pas de stress, ton projet, lui, peut en suivre un. 9 parties, 1 livrable corrigé à
+              chaque étape, 18 mois à côté de ton emploi.
+            </p>
+            <div class="mk-actions">
+              <a class="button button--accent" href="/">
+                Retour à l’accueil
+              </a>
+              <a class="button button--ghost" href="/programme">
+                Voir le programme
+              </a>
+              <a class="button button--ghost" href="/contact">
+                Réserver un appel découverte
+              </a>
+            </div>
+            <p class="notfound__note">Erreur 404 signalée, on s’en occupe.</p>
+          </div>
+        </section>
+      </div>
+    </MarketingLayout>
+  )
+}

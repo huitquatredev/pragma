@@ -1,0 +1,41 @@
+---
+import { storyblokEditable } from '@storyblok/astro';
+import { linkHref, lines } from '../../lib/vitrine';
+
+interface Props {
+  blok: any;
+}
+
+const { blok } = Astro.props;
+const outcomes = lines(blok.outcomes);
+---
+
+<section
+  class="mk-section"
+  id={blok.anchor || undefined}
+  {...storyblokEditable(blok)}
+  aria-labelledby={`${blok.anchor || 'band'}-title`}>
+  <div class="mk-band">
+    <div class="mk-band__inner">
+      {blok.eyebrow && <p class="eyebrow">{blok.eyebrow}</p>}
+      <h2 id={`${blok.anchor || 'band'}-title`}>{blok.title}</h2>
+      {blok.text && <p>{blok.text}</p>}
+      {
+        outcomes.length > 0 && (
+          <ul class="mk-outcomes">
+            {outcomes.map((outcome) => (
+              <li>{outcome}</li>
+            ))}
+          </ul>
+        )
+      }
+      {
+        blok.cta_label && (
+          <a class="button" href={linkHref(blok.cta_link)}>
+            {blok.cta_label}
+          </a>
+        )
+      }
+    </div>
+  </div>
+</section>

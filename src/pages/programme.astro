@@ -1,0 +1,8 @@
+---
+import VitrinePage from '../components/vitrine/VitrinePage.astro';
+import { fetchStory } from '../lib/storyblok';
+
+const story = await fetchStory('programme');
+---
+
+<VitrinePage {story} />

@@ -1,0 +1,98 @@
+---
+import { storyblokEditable } from '@storyblok/astro';
+import { linkHref } from '../../lib/vitrine';
+
+interface Props {
+  blok: any;
+}
+
+const { blok } = Astro.props;
+const plan = blok.plan?.[0];
+const facts = blok.facts ?? [];
+---
+
+{
+  plan ? (
+    <section class="mk-hero" {...storyblokEditable(blok)}>
+      <div class="mk-hero__copy">
+        {blok.eyebrow && <p class="eyebrow">{blok.eyebrow}</p>}
+        <h1>
+          {blok.title}
+          {blok.accent && <span class="accent"> {blok.accent}</span>}
+        </h1>
+        {blok.lede && <p class="mk-hero__lede">{blok.lede}</p>}
+        <div class="mk-actions">
+          {blok.primary_label && (
+            <a class="button button--accent" href={linkHref(blok.primary_link)}>
+              {blok.primary_label}
+            </a>
+          )}
+          {blok.secondary_label && (
+            <a class="button button--ghost" href={linkHref(blok.secondary_link)}>
+              {blok.secondary_label}
+            </a>
+          )}
+        </div>
+        {blok.note && <p class="mk-hero__note">{blok.note}</p>}
+      </div>
+
+      <aside class="plan" aria-label="Le plan des 9 étapes Pragma" {...storyblokEditable(plan)}>
+        <div class="plan__top">
+          <span class="plan__tag">{plan.top_left}</span>
+          <span>{plan.top_right}</span>
+        </div>
+        <ol class="plan__grid">
+          {plan.items?.map((item: any) => (
+            <li
+              class:list={['plan__cell', item.highlight && 'plan__cell--goal']}
+              {...storyblokEditable(item)}>
+              <span>{item.number}</span>
+              {item.label}
+            </li>
+          ))}
+        </ol>
+        <div class="plan__foot">
+          <span>{plan.foot_left}</span>
+          <strong>{plan.foot_right}</strong>
+        </div>
+      </aside>
+    </section>
+  ) : (
+    <section class="v-hero" {...storyblokEditable(blok)}>
+      {blok.eyebrow && <p class="eyebrow">{blok.eyebrow}</p>}
+      <h1>
+        {blok.title}
+        {blok.accent && <span class="accent"> {blok.accent}</span>}
+      </h1>
+      <div class="v-hero__row">
+        {blok.lede && <p class="v-hero__lede">{blok.lede}</p>}
+        <div class="mk-actions">
+          {blok.primary_label && (
+            <a class="button button--accent" href={linkHref(blok.primary_link)}>
+              {blok.primary_label}
+            </a>
+          )}
+          {blok.secondary_label && (
+            <a class="button button--ghost" href={linkHref(blok.secondary_link)}>
+              {blok.secondary_label}
+            </a>
+          )}
+        </div>
+      </div>
+      {blok.note && <p class="mk-hero__note">{blok.note}</p>}
+    </section>
+  )
+}
+
+{
+  facts.length > 0 && (
+    <ul class="mk-facts" aria-label={blok.facts_label || 'Chiffres clés'}>
+      {facts.map((fact: any) => (
+        <li {...storyblokEditable(fact)}>
+          <strong>{fact.value}</strong>
+          <span>{fact.label}</span>
+        </li>
+      ))}
+    </ul>
+  )
+}

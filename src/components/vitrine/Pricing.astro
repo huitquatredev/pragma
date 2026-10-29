@@ -1,0 +1,53 @@
+---
+import { storyblokEditable } from '@storyblok/astro';
+import { linkHref, lines } from '../../lib/vitrine';
+
+interface Props {
+  blok: any;
+}
+
+const { blok } = Astro.props;
+const cards = blok.cards ?? [];
+---
+
+<section
+  class="mk-section mk-pricing"
+  id={blok.anchor || undefined}
+  {...storyblokEditable(blok)}
+  aria-labelledby={`${blok.anchor || 'pricing'}-title`}>
+  {blok.eyebrow && <p class="eyebrow">{blok.eyebrow}</p>}
+  <h2 id={`${blok.anchor || 'pricing'}-title`}>{blok.title}</h2>
+  {blok.intro && <p class="mk-lede">{blok.intro}</p>}
+
+  <div class="mk-price-grid">
+    {
+      cards.map((card: any) => (
+        <article
+          class:list={['mk-price', card.featured && 'mk-price--featured']}
+          {...storyblokEditable(card)}>
+          {card.badge && <span class="mk-price__badge">{card.badge}</span>}
+          <div>
+            <h3>{card.name}</h3>
+            {card.lede && <p class="mk-price__lede">{card.lede}</p>}
+          </div>
+          <p class="mk-price__amount">
+            {card.price}
+            {card.price_note && <small>{card.price_note}</small>}
+          </p>
+          <ul>
+            {lines(card.features).map((feature) => (
+              <li>{feature}</li>
+            ))}
+          </ul>
+          {card.cta_label && (
+            <a class="button" href={linkHref(card.cta_link)}>
+              {card.cta_label}
+            </a>
+          )}
+        </article>
+      ))
+    }
+  </div>
+
+  {blok.note && <p class="mk-price-note">{blok.note}</p>}
+</section>

@@ -1,0 +1,52 @@
+---
+import { storyblokEditable } from '@storyblok/astro';
+import RichText from '../app/RichText.astro';
+import { lines } from '../../lib/vitrine';
+
+interface Props {
+  blok: any;
+}
+
+const { blok } = Astro.props;
+const items = lines(blok.list_items);
+const rail = lines(blok.rail_items);
+---
+
+<section
+  class="mk-section"
+  id={blok.anchor || undefined}
+  {...storyblokEditable(blok)}
+  aria-labelledby={`${blok.anchor || 'text'}-title`}>
+  <div class="mk-split">
+    <div>
+      {blok.eyebrow && <p class="eyebrow">{blok.eyebrow}</p>}
+      <h2 id={`${blok.anchor || 'text'}-title`}>{blok.title}</h2>
+      {blok.note && <p class="mk-note">{blok.note}</p>}
+    </div>
+    <div class="mk-prose">
+      {blok.body && <RichText document={blok.body} />}
+      {
+        items.length > 0 && (
+          <ul class="mk-gaps">
+            {items.map((item) => (
+              <li>{item}</li>
+            ))}
+          </ul>
+        )
+      }
+    </div>
+  </div>
+
+  {
+    blok.variant === 'method' && rail.length > 0 && (
+      <ol class="mk-rail" aria-label={blok.rail_label || 'Les 9 parties du programme'}>
+        {rail.map((label, index) => (
+          <li>
+            <span>{String(index + 1).padStart(2, '0')}</span>
+            {label}
+          </li>
+        ))}
+      </ol>
+    )
+  }
+</section>

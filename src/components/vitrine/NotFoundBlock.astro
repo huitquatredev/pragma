@@ -1,0 +1,54 @@
+---
+import { storyblokEditable } from '@storyblok/astro';
+import { linkHref } from '../../lib/vitrine';
+
+interface Props {
+  blok: any;
+}
+
+const { blok } = Astro.props;
+---
+
+<section class="notfound" {...storyblokEditable(blok)}>
+  <div>
+    {blok.eyebrow && <p class="eyebrow">{blok.eyebrow}</p>}
+    <h1>{blok.title}</h1>
+    {blok.text && <p class="notfound__lede">{blok.text}</p>}
+    <div class="mk-actions">
+      {
+        blok.primary_label && (
+          <a class="button button--accent" href={linkHref(blok.primary_link)}>
+            {blok.primary_label}
+          </a>
+        )
+      }
+      {
+        blok.secondary_label && (
+          <a class="button button--ghost" href={linkHref(blok.secondary_link)}>
+            {blok.secondary_label}
+          </a>
+        )
+      }
+      {
+        blok.tertiary_label && (
+          <a class="button button--ghost" href={linkHref(blok.tertiary_link)}>
+            {blok.tertiary_label}
+          </a>
+        )
+      }
+    </div>
+    {blok.note && <p class="notfound__note">{blok.note}</p>}
+  </div>
+
+  <div class="notfound__plan" aria-hidden="true">
+    <div class="notfound__plan-top">
+      <span>{blok.visual_top_left}</span>
+      <span>{blok.visual_top_right}</span>
+    </div>
+    <span class="notfound__code">{blok.visual_code || '404'}</span>
+    <div class="notfound__plan-foot">
+      <span>{blok.visual_foot_left}</span>
+      <span>{blok.visual_foot_right}</span>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,10 @@
+---
+import VitrinePage from '../components/vitrine/VitrinePage.astro';
+import { fetchStory } from '../lib/storyblok';
+
+const story = await fetchStory('contact');
+const envoye = Astro.url.searchParams.get('envoye') === '1';
+const erreur = Astro.url.searchParams.get('erreur');
+---
+
+<VitrinePage {story} robots={envoye || erreur ? 'noindex' : undefined} />

@@ -13,6 +13,17 @@ const safeSeo = seo || {
   ogImageAlt: '',
   canonical: null,
 };
+
+const canonicalHref = (() => {
+  const base = Astro.site ?? Astro.url;
+  try {
+    return safeSeo.canonical
+      ? new URL(safeSeo.canonical, base).href
+      : new URL(Astro.url.pathname, base).href;
+  } catch {
+    return Astro.url.href;
+  }
+})();
 ---
 
 <head>
@@ -25,8 +36,7 @@ const safeSeo = seo || {
 
   <meta name="generator" content={Astro.generator} />
 
-  {safeSeo.canonical && <link rel="canonical" href={Astro.url.href + safeSeo.canonical} />}
-  {!safeSeo.canonical && <link rel="canonical" href={Astro.url.href} />}
+  <link rel="canonical" href={canonicalHref} />
 
   {safeSeo.description && <meta name="description" content={safeSeo.description} />}
 
@@ -49,7 +59,7 @@ const safeSeo = seo || {
 
   {safeSeo.description && <meta property="og:description" content={safeSeo.description} />}
   <meta property="og:locale" content="fr_FR" />
-  <meta property="og:site_name" content="huitquatre" />
+  <meta property="og:site_name" content={import.meta.env.SITE_NAME || 'Pragma'} />
   {safeSeo.ogImageAlt && <meta property="og:image:alt" content={safeSeo.ogImageAlt} />}
 
   <meta name="twitter:dnt" content="on" />

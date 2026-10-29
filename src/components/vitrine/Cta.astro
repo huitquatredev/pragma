@@ -1,0 +1,39 @@
+---
+import { storyblokEditable } from '@storyblok/astro';
+import { linkHref } from '../../lib/vitrine';
+
+interface Props {
+  blok: any;
+}
+
+const { blok } = Astro.props;
+---
+
+<section
+  class:list={['mk-cta', blok.wide && 'mk-cta--wide']}
+  id={blok.anchor || undefined}
+  {...storyblokEditable(blok)}
+  aria-labelledby={`${blok.anchor || 'cta'}-title`}>
+  <div class="mk-cta__inner">
+    <div>
+      <h2 id={`${blok.anchor || 'cta'}-title`}>{blok.title}</h2>
+      {blok.text && <p>{blok.text}</p>}
+    </div>
+    <div class="mk-actions">
+      {
+        blok.primary_label && (
+          <a class="button button--accent" href={linkHref(blok.primary_link)}>
+            {blok.primary_label}
+          </a>
+        )
+      }
+      {
+        blok.secondary_label && (
+          <a class="button button--ghost" href={linkHref(blok.secondary_link)}>
+            {blok.secondary_label}
+          </a>
+        )
+      }
+    </div>
+  </div>
+</section>

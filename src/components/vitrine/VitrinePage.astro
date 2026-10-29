@@ -1,0 +1,36 @@
+---
+import { storyblokEditable } from '@storyblok/astro';
+import MarketingLayout from '../../layouts/MarketingLayout.astro';
+import VitrineBlok from './VitrineBlok.astro';
+import { linkHref } from '../../lib/vitrine';
+
+interface Props {
+  story: any;
+  robots?: string;
+}
+
+const { story, robots } = Astro.props;
+const content = story.content;
+const body = content.body ?? [];
+const ctaHref = linkHref(content.cta_link) || '/contact';
+const ctaLabel = content.cta_label || 'Je construis mon activité';
+const canonical = content.canonical?.cached_url || content.canonical?.url || null;
+const ogImage = content.og_image?.filename || null;
+const ogImageAlt = content.og_image?.alt || '';
+const schema = typeof content.schema === 'string' ? content.schema : null;
+---
+
+<MarketingLayout
+  title={content.title || 'Pragma'}
+  description={content.description || ''}
+  robots={robots ?? content.robots ?? 'all'}
+  {ctaHref}
+  {ctaLabel}
+  {canonical}
+  {ogImage}
+  {ogImageAlt}
+  {schema}>
+  <div class="marketing-shell" {...storyblokEditable(content)}>
+    {body.map((blok: any) => <VitrineBlok blok={blok} />)}
+  </div>
+</MarketingLayout>

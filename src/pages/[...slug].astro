@@ -1,90 +1,62 @@
 ---
+import process from 'node:process';
 import { useStoryblokApi } from '@storyblok/astro';
 import StoryblokComponent from '@storyblok/astro/StoryblokComponent.astro';
 import Layout from '../layouts/Layout.astro';
+import VitrinePage from '../components/vitrine/VitrinePage.astro';
 import type { StoryblokStory } from '../lib/storyblok';
 
 const storyblokApi = useStoryblokApi();
 const { slug } = Astro.params;
-const isPreview = import.meta.env.IS_PREVIEW === 'true';
+const isPreview = process.env.IS_PREVIEW === 'true' || import.meta.env.IS_PREVIEW === 'true';
+const version = isPreview ? 'draft' : 'published';
+
+const notFound = () => {
+  Astro.response.status = 404;
+  return Astro.rewrite('/404');
+};
+
+if (slug === 'home') {
+  return Astro.redirect('/', 301);
+}
 
 if (slug === 'parties/index-general' || slug?.endsWith('/index-general')) {
-  return new Response(null, { status: 404, statusText: 'Not found' });
-}
-interface Props {
-  story?: StoryblokStory;
-}
-const { story: staticStory } = Astro.props as Props;
-
-// For SSG: Generate static paths for all stories
-export async function getStaticPaths() {
-  const sbApi = useStoryblokApi();
-
-  // Use 'draft' version in preview mode, 'published' otherwise
-const isPreview = process.env.IS_PREVIEW === 'true' || import.meta.env.IS_PREVIEW === 'true';
-  const version = isPreview ? 'draft' : 'published';
-
-  const { data } = await sbApi.get('cdn/stories', {
-    version,
-    token: import.meta.env.STORYBLOK_TOKEN,
-    starts_with: '',
-  });
-
-  return (data.stories as StoryblokStory[])
-    .filter((story) => story.full_slug !== 'parties/index-general')
-    .map((story) => ({
-    params: {
-      slug: story.full_slug === 'home' || story.full_slug === '' ? undefined : story.full_slug,
-    },
-    props: { story },
-  }));
+  return notFound();
 }
 
 let story: StoryblokStory | undefined;
-
-if (isPreview) {
-  // SSR mode: fetch on-demand for Storyblok visual editor
-  try {
-    const { data } = await storyblokApi.get(`cdn/stories/${slug || 'home'}`, {
-      version: 'draft',
-      token: import.meta.env.STORYBLOK_TOKEN,
-    });
-    story = data.story;
-  } catch {
-    return new Response(null, {
-      status: 404,
-      statusText: 'Not found',
-    });
-  }
-} else {
-  // SSG mode: story comes from getStaticPaths props
-  story = staticStory;
-}
-
-// Guard: If story is undefined (e.g., static assets routed through), return 404
-if (!story) {
-  return new Response(null, {
-    status: 404,
-    statusText: 'Not found',
+try {
+  const { data } = await storyblokApi.get(`cdn/stories/${slug || 'home'}`, {
+    version,
+    token: import.meta.env.STORYBLOK_TOKEN,
   });
+  story = data.story;
+} catch {
+  return notFound();
 }
+
+if (!story) return notFound();
 
 const seo = {
-  title: story ? story.content?.title : 'Page non trouvée',
-  description: story ? story.content.description : 'Page non trouvée',
-  robots: story ? story.content.robots : 'all',
-  schema: story ? story.content.schema : null,
-  ogImage: story && story.content.ogImage ? story.content.ogImage.filename : null,
-  ogImageAlt:
-    story && story.content.ogImageAlt
-      ? story.content.ogImageAlt
-      : story.content.ogImage?.alt
-        ? story.content.ogImage.alt
-        : ' ',
-  canonical: story ? story.content.canonical?.url : null,
+  title: story.content?.title,
+  description: story.content.description,
+  robots: story.content.robots,
+  schema: story.content.schema,
+  ogImage: story.content.ogImage ? story.content.ogImage.filename : null,
+  ogImageAlt: story.content.ogImageAlt
+    ? story.content.ogImageAlt
+    : story.content.ogImage?.alt
+      ? story.content.ogImage.alt
+      : ' ',
+  canonical: story.content.canonical?.url,
 };
 ---
 
-<Layout {seo}>
-  <StoryblokComponent blok={story.content as never} />
-</Layout>
+{story.content.component === 'vitrine_page' && <VitrinePage story={story} />}
+{
+  story.content.component !== 'vitrine_page' && (
+    <Layout {seo}>
+      <StoryblokComponent blok={story.content as never} />
+    </Layout>
+  )
+}

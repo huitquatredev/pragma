@@ -1,0 +1,31 @@
+---
+import { storyblokEditable } from '@storyblok/astro';
+import RichText from '../app/RichText.astro';
+
+interface Props {
+  blok: any;
+}
+
+const { blok } = Astro.props;
+const items = blok.items ?? [];
+---
+
+<section
+  class="mk-section"
+  id={blok.anchor || undefined}
+  {...storyblokEditable(blok)}
+  aria-labelledby={`${blok.anchor || 'faq'}-title`}>
+  {blok.eyebrow && <p class="eyebrow">{blok.eyebrow}</p>}
+  <h2 id={`${blok.anchor || 'faq'}-title`}>{blok.title}</h2>
+
+  <div class="mk-faq">
+    {
+      items.map((item: any) => (
+        <details {...storyblokEditable(item)}>
+          <summary>{item.question}</summary>
+          <div class="mk-faq__body">{item.answer && <RichText document={item.answer} />}</div>
+        </details>
+      ))
+    }
+  </div>
+</section>

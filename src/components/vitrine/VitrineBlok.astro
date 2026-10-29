@@ -1,0 +1,37 @@
+---
+import Hero from './Hero.astro';
+import TextSection from './TextSection.astro';
+import Cards from './Cards.astro';
+import ProgrammeBand from './ProgrammeBand.astro';
+import Parts from './Parts.astro';
+import Pricing from './Pricing.astro';
+import Faq from './Faq.astro';
+import Team from './Team.astro';
+import Cta from './Cta.astro';
+import ContactBlock from './ContactBlock.astro';
+import NotFoundBlock from './NotFoundBlock.astro';
+
+interface Props {
+  blok: any;
+}
+
+const { blok } = Astro.props;
+
+const components: Record<string, any> = {
+  vitrine_hero: Hero,
+  vitrine_text_section: TextSection,
+  vitrine_cards: Cards,
+  vitrine_programme_band: ProgrammeBand,
+  vitrine_parts: Parts,
+  vitrine_pricing: Pricing,
+  vitrine_faq: Faq,
+  vitrine_team: Team,
+  vitrine_cta: Cta,
+  vitrine_contact: ContactBlock,
+  vitrine_notfound: NotFoundBlock,
+};
+
+const Component = components[blok.component];
+---
+
+{Component ? <Component blok={blok} /> : null}

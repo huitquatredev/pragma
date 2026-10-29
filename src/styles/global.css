@@ -148,8 +148,8 @@ a {
   cursor: not-allowed;
 }
 .button--accent {
-  background: var(--pg-orange);
-  border-color: var(--pg-orange);
+  background: var(--pg-orange-strong);
+  border-color: var(--pg-orange-strong);
 }
 .button--accent:hover,
 .button--accent:focus-visible {

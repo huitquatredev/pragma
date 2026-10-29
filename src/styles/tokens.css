@@ -11,6 +11,8 @@
   --pg-navy-ink: #0b1e4e;
   --pg-orange: #f45844;
   --pg-orange-deep: #d94834;
+  /* AA-compliant shade for filled buttons (white text >= 4.5:1). */
+  --pg-orange-strong: #cf4230;
   --pg-orange-soft: #ffe9e4;
 
   /* Surfaces */

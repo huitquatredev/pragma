@@ -1,0 +1,130 @@
+---
+import { storyblokEditable } from '@storyblok/astro';
+import { contactEmail } from '../../lib/email';
+import { linkHref } from '../../lib/vitrine';
+
+interface Props {
+  blok: any;
+}
+
+const { blok } = Astro.props;
+const email = blok.email || contactEmail();
+const bookingHref =
+  linkHref(blok.aside_cta_link) ||
+  `mailto:${email}?subject=${encodeURIComponent('Réserver un appel découverte')}`;
+const envoye = Astro.url.searchParams.get('envoye') === '1';
+const erreur = Astro.url.searchParams.get('erreur');
+const subjects = blok.subjects ?? [];
+const anchor = blok.anchor || 'formulaire';
+---
+
+<section
+  class="mk-section"
+  id={anchor}
+  {...storyblokEditable(blok)}
+  aria-labelledby={`${anchor}-title`}>
+  <div class="contact-layout">
+    <div class="contact-card">
+      <div class="contact-card__head">
+        <p class="eyebrow">{blok.form_eyebrow || 'Ta question'}</p>
+        <h2 id={`${anchor}-title`}>{blok.form_title || 'Écris-nous'}</h2>
+      </div>
+
+      {
+        envoye && (
+          <p class="contact-status contact-status--ok" role="status">
+            {blok.success_message || 'Message envoyé. On te répond sous 2 jours ouvrés.'}
+          </p>
+        )
+      }
+
+      {
+        erreur && (
+          <p class="contact-status contact-status--error" role="alert">
+            {erreur === 'envoi' ? (
+              <>
+                {blok.send_error_message || 'L’envoi automatique n’a pas abouti. Écris-nous à'}{' '}
+                <a href={`mailto:${email}`}>{email}</a>.
+              </>
+            ) : (
+              blok.error_message || 'Merci de vérifier les champs du formulaire avant de l’envoyer.'
+            )}
+          </p>
+        )
+      }
+
+      <form class="contact-form" method="post" action="/api/contact">
+        <div class="contact-field">
+          <label for="prenom">{blok.first_name_label || 'Prénom'}</label>
+          <input
+            id="prenom"
+            name="prenom"
+            type="text"
+            autocomplete="given-name"
+            maxlength="80"
+            required
+          />
+        </div>
+
+        <div class="contact-field">
+          <label for="email">{blok.email_label || 'Email'}</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            autocomplete="email"
+            maxlength="200"
+            required
+          />
+        </div>
+
+        <div class="contact-field">
+          <label for="sujet">{blok.subject_label || 'Sujet'}</label>
+          <select id="sujet" name="sujet" required>
+            <option value="">Choisis un sujet</option>
+            {subjects.map((subject: any) => <option value={subject.value}>{subject.label}</option>)}
+          </select>
+        </div>
+
+        <div class="contact-field">
+          <label for="message">{blok.message_label || 'Message'}</label>
+          <textarea id="message" name="message" rows="7" minlength="10" maxlength="5000" required
+          ></textarea>
+        </div>
+
+        <div class="contact-honeypot" aria-hidden="true">
+          <label for="site">Site</label>
+          <input id="site" name="site" type="text" tabindex="-1" autocomplete="off" />
+        </div>
+
+        <button class="button button--accent" type="submit">
+          {blok.submit_label || 'Envoyer ma question'}
+        </button>
+        {blok.note && <p class="contact-note">{blok.note}</p>}
+      </form>
+    </div>
+
+    <aside class="contact-aside">
+      <div class="contact-aside__card">
+        <p class="eyebrow">{blok.aside_eyebrow || 'Appel découverte'}</p>
+        <h2>{blok.aside_title || 'Tu préfères en parler ?'}</h2>
+        {blok.aside_text && <p>{blok.aside_text}</p>}
+        {
+          blok.aside_cta_label && (
+            <a class="button button--accent" href={bookingHref}>
+              {blok.aside_cta_label}
+            </a>
+          )
+        }
+      </div>
+
+      <div class="contact-aside__block">
+        <p class="eyebrow">{blok.contact_eyebrow || 'Écrire directement'}</p>
+        <a class="contact-aside__email" href={`mailto:${email}`}>
+          {email}
+        </a>
+        {blok.contact_note && <p>{blok.contact_note}</p>}
+      </div>
+    </aside>
+  </div>
+</section>

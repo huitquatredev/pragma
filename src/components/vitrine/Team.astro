@@ -1,0 +1,128 @@
+---
+import { storyblokEditable } from '@storyblok/astro';
+import RichText from '../app/RichText.astro';
+import { linkHref, lines } from '../../lib/vitrine';
+
+interface Props {
+  blok: any;
+}
+
+const { blok } = Astro.props;
+const variant = blok.variant || 'compact';
+const people = blok.people ?? [];
+const support = people[0];
+---
+
+{
+  variant === 'compact' ? (
+    <section
+      class="mk-section"
+      id={blok.anchor || undefined}
+      {...storyblokEditable(blok)}
+      aria-labelledby={`${blok.anchor || 'team'}-title`}>
+      <div class="mk-split">
+        <div>
+          {blok.eyebrow && <p class="eyebrow">{blok.eyebrow}</p>}
+          <h2 id={`${blok.anchor || 'team'}-title`}>{blok.title}</h2>
+          {blok.intro && <p class="mk-lede">{blok.intro}</p>}
+          {blok.link_label && (
+            <p class="mk-team-foot">
+              <a href={linkHref(blok.link_url)}>{blok.link_label}</a>
+            </p>
+          )}
+        </div>
+        <ul class="mk-team-list">
+          {people.map((person: any) => (
+            <li {...storyblokEditable(person)}>
+              <span class="mk-avatar" aria-hidden="true">
+                {person.initials}
+              </span>
+              <div>
+                <strong>{person.name}</strong>
+                <span>{person.role}</span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+      {blok.foot && <p class="mk-team-foot">{blok.foot}</p>}
+    </section>
+  ) : (
+    <section
+      class="mk-section"
+      id={blok.anchor || undefined}
+      {...storyblokEditable(blok)}
+      aria-labelledby={`${blok.anchor || 'team'}-title`}>
+      <div class="mk-split">
+        <div>
+          {blok.eyebrow && <p class="eyebrow">{blok.eyebrow}</p>}
+          <h2 id={`${blok.anchor || 'team'}-title`}>{blok.title}</h2>
+        </div>
+        {blok.intro && <p class="mk-lede">{blok.intro}</p>}
+      </div>
+
+      {variant === 'grid' && (
+        <div class="team-grid">
+          {people.map((person: any, index: number) => (
+            <article class="team-card" {...storyblokEditable(person)}>
+              <div class="team-card__portrait" aria-hidden="true">
+                <span class="team-card__initials">{person.initials}</span>
+                <span class="team-card__index">
+                  {person.index || String(index + 1).padStart(2, '0')}
+                </span>
+              </div>
+              <div class="team-card__body">
+                <div>
+                  <h3>{person.name}</h3>
+                  <p class="team-card__role">{person.role}</p>
+                </div>
+                {lines(person.tags).length > 0 && (
+                  <ul class="team-card__tags" aria-label={`Spécialités de ${person.name}`}>
+                    {lines(person.tags).map((tag) => (
+                      <li>{tag}</li>
+                    ))}
+                  </ul>
+                )}
+                <div class="team-card__bio">{person.bio && <RichText document={person.bio} />}</div>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+
+      {variant === 'mentors' && (
+        <div class="mentor-grid">
+          {people.map((person: any) => (
+            <article class="mentor-card" {...storyblokEditable(person)}>
+              <span class="mentor-card__avatar" aria-hidden="true">
+                {person.initials}
+              </span>
+              <div>
+                <h3>{person.name}</h3>
+                <p class="mentor-card__role">{person.role}</p>
+                <div class="mentor-card__bio">
+                  {person.bio && <RichText document={person.bio} />}
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+
+      {variant === 'support' && support && (
+        <div class="support-card" {...storyblokEditable(support)}>
+          <div class="support-card__person">
+            <span class="mentor-card__avatar" aria-hidden="true">
+              {support.initials}
+            </span>
+            <div>
+              <h3>{support.name}</h3>
+              <p class="support-card__role">{support.role}</p>
+            </div>
+          </div>
+          <div class="support-card__bio">{support.bio && <RichText document={support.bio} />}</div>
+        </div>
+      )}
+    </section>
+  )
+}

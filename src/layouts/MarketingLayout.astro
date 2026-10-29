@@ -1,0 +1,172 @@
+---
+import Head from './Head.astro';
+import SkipLink from './SkipLink.astro';
+import '../styles/global.css';
+import '../styles/marketing.css';
+
+interface Props {
+  title: string;
+  description: string;
+  ctaHref?: string;
+  ctaLabel?: string;
+  canonical?: string | null;
+  ogImage?: string | null;
+  ogImageAlt?: string;
+  schema?: string | null;
+  robots?: string;
+}
+
+const {
+  title,
+  description,
+  ctaHref = '/contact',
+  ctaLabel = 'Je construis mon activité',
+  canonical = null,
+  ogImage = null,
+  ogImageAlt = '',
+  schema = null,
+  robots = 'all',
+} = Astro.props;
+
+const year = new Date().getFullYear();
+const pathname = Astro.url.pathname.replace(/\/+$/, '') || '/';
+
+const navLinks = [
+  { href: '/equipe', label: 'L’équipe' },
+  { href: '/programme', label: 'Le programme' },
+  { href: '/contact', label: 'Contact' },
+];
+---
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <Head
+      seo={{
+        title,
+        description,
+        canonical,
+        ogImage,
+        ogImageAlt,
+        schema,
+        robots,
+        themeColor: '#08327d',
+      }}
+    />
+  </head>
+  <body>
+    <SkipLink />
+
+    <header class="mk-header">
+      <div class="mk-header__inner">
+        <a href="/" class="mk-logo">
+          <img src="/logo_couleur.svg" alt="Pragma — Accueil" width="244" height="99" />
+        </a>
+
+        <nav class="mk-nav" aria-label="Navigation principale">
+          {
+            navLinks.map((link) => (
+              <a href={link.href} aria-current={pathname === link.href ? 'page' : undefined}>
+                {link.label}
+              </a>
+            ))
+          }
+        </nav>
+
+        <div class="mk-header__actions">
+          <a class="button button--accent" href={ctaHref}>{ctaLabel}</a>
+        </div>
+
+        <details class="mk-menu">
+          <summary aria-label="Ouvrir le menu">Menu</summary>
+          <nav class="mk-menu__panel" aria-label="Navigation mobile">
+            {
+              navLinks.map((link) => (
+                <a href={link.href} aria-current={pathname === link.href ? 'page' : undefined}>
+                  {link.label}
+                </a>
+              ))
+            }
+            <a href={ctaHref}>{ctaLabel}</a>
+          </nav>
+        </details>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <slot />
+    </main>
+
+    <footer class="mk-footer">
+      <div class="mk-footer__inner">
+        <div>
+          <a href="/" class="mk-logo mk-logo--footer">
+            <img src="/logo_footer.svg" alt="Pragma — Accueil" width="244" height="99" />
+          </a>
+          <p class="mk-footer__tag">
+            La méthode concrète pour structurer ton offre et signer tes premiers clients, à côté de
+            ton emploi.
+          </p>
+        </div>
+
+        <div class="mk-footer__cols">
+          <div class="mk-footer__col">
+            <p>Programme</p>
+            <a href="/programme">Le programme</a>
+            <a href="/#formules">Les formules</a>
+            <a href="/#faq">Questions fréquentes</a>
+          </div>
+          <div class="mk-footer__col">
+            <p>Pragma</p>
+            <a href="/equipe">L’équipe</a>
+            <a href="/login">Espace apprenant</a>
+            <a href="/contact">Contact</a>
+          </div>
+          <div class="mk-footer__col">
+            <p>Écrire</p>
+            <a href="mailto:bonjour@pragma-formation.fr">bonjour@pragma-formation.fr</a>
+            <a href="/contact">Réserver un appel</a>
+          </div>
+        </div>
+
+        <div class="mk-footer__legal">
+          <span>© {year} Pragma. Tous droits réservés.</span>
+          <span>
+            <a href="/mentions-legales">Mentions légales</a>
+            &nbsp;·&nbsp;
+            <a href="/cgv">CGV</a>
+            &nbsp;·&nbsp;
+            <a href="/confidentialite">Confidentialité</a>
+          </span>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      const menu = document.querySelector<HTMLDetailsElement>('.mk-menu');
+      if (menu) {
+        const summary = menu.querySelector('summary');
+
+        menu.addEventListener('click', (event) => {
+          const target = event.target;
+          if (target instanceof Element && target.closest('a')) {
+            menu.removeAttribute('open');
+          }
+        });
+
+        document.addEventListener('click', (event) => {
+          if (menu.open && event.target instanceof Node && !menu.contains(event.target)) {
+            menu.removeAttribute('open');
+          }
+        });
+
+        document.addEventListener('keydown', (event) => {
+          if (event.key === 'Escape' && menu.open) {
+            menu.removeAttribute('open');
+            summary?.focus();
+          }
+        });
+      }
+    </script>
+  </body>
+</html>
