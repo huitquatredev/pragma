@@ -1,0 +1,21 @@
+---
+interface Props {
+  href?: string;
+  label?: string;
+  class?: string;
+  variant?: 'color' | 'footer';
+}
+
+const {
+  href = '/',
+  label = 'Pragma — Accueil',
+  class: className = '',
+  variant = 'color',
+} = Astro.props;
+
+const src = variant === 'footer' ? '/logo_footer.svg' : '/logo_couleur.svg';
+---
+
+<a {href} class:list={['site-logo', className]} aria-label={label}>
+  <img {src} alt="" width="244" height="99" />
+</a>

@@ -63,23 +63,18 @@ a {
 }
 
 /* Brand */
-.wordmark {
+.site-logo {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  font-weight: 800;
-  font-size: 1.35rem;
-  letter-spacing: -0.02em;
-  color: var(--pg-navy);
-  text-decoration: none;
-}
-.wordmark::before {
-  content: '';
-  width: 0.85em;
-  height: 0.85em;
   flex: none;
-  border-radius: 0.18em;
-  background: linear-gradient(135deg, var(--pg-navy) 55%, var(--pg-orange) 55%);
+}
+.site-logo img {
+  display: block;
+  width: auto;
+  height: 2.7rem;
+}
+.auth-card .site-logo img {
+  height: 2.5rem;
 }
 
 /* Typography */

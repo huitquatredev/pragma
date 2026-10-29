@@ -1,5 +1,6 @@
 ---
 import Head from './Head.astro';
+import Logo from '../components/Logo.astro';
 import SkipLink from './SkipLink.astro';
 import '../styles/global.css';
 import '../styles/marketing.css';
@@ -59,9 +60,7 @@ const navLinks = [
 
     <header class="mk-header">
       <div class="mk-header__inner">
-        <a href="/" class="mk-logo">
-          <img src="/logo_couleur.svg" alt="Pragma — Accueil" width="244" height="99" />
-        </a>
+        <Logo class="mk-logo" href="/" label="Pragma — Accueil" />
 
         <nav class="mk-nav" aria-label="Navigation principale">
           {
@@ -100,9 +99,12 @@ const navLinks = [
     <footer class="mk-footer">
       <div class="mk-footer__inner">
         <div>
-          <a href="/" class="mk-logo mk-logo--footer">
-            <img src="/logo_footer.svg" alt="Pragma — Accueil" width="244" height="99" />
-          </a>
+          <Logo
+            class="mk-logo mk-logo--footer"
+            href="/"
+            label="Pragma — Accueil"
+            variant="footer"
+          />
           <p class="mk-footer__tag">
             La méthode concrète pour structurer ton offre et signer tes premiers clients, à côté de
             ton emploi.

@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import Logo from '../components/Logo.astro';
 import { createSupabaseServerClient } from '../lib/supabase';
 
 const supabase = createSupabaseServerClient(Astro);
@@ -21,7 +22,7 @@ if (user) {
 <Layout seo={{ title: 'Connexion — Pragma Formation', description: 'Connexion par email.' }}>
   <main class="auth-page">
     <div class="auth-card">
-      <a href="/" class="wordmark" aria-label="Pragma Formation">pragma</a>
+      <Logo href="/" label="Pragma Formation" />
       <h1>Votre espace d’apprentissage.</h1>
       <p>Recevez un lien de connexion sécurisé par email.</p>
       {

@@ -1,5 +1,6 @@
 ---
 import Layout from './Layout.astro';
+import Logo from '../components/Logo.astro';
 interface Props {
   title: string;
 }
@@ -8,7 +9,7 @@ const { title } = Astro.props;
 
 <Layout seo={{ title, description: 'Pragma Formation' }}>
   <header class="app-header">
-    <a href="/dashboard" class="wordmark" aria-label="Pragma Formation — Dashboard">pragma</a>
+    <Logo href="/dashboard" label="Pragma Formation — Dashboard" />
     <form method="post" action="/auth/logout">
       <button type="submit" class="button button--text">Se déconnecter</button>
     </form>
