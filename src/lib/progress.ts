@@ -45,6 +45,10 @@ export function partCourses(part: StoryblokStory, inscription: Inscription) {
   return accessibleCourses([...fromModules, ...direct], inscription);
 }
 
+export function moduleCourses(module: StoryblokStory, inscription: Inscription) {
+  return accessibleCourses(module.content?.cours ?? [], inscription);
+}
+
 export function getModuleStatus(
   module: StoryblokStory,
   validatedIds: Set<string>,
