@@ -510,8 +510,8 @@ const home = page({
   title: 'Pragma, de salarié à freelance sans quitter ton poste',
   description:
     'Méthode en 9 étapes pour structurer ton offre et signer tes premiers clients. 4h/semaine · 18 mois · Espace privé et Discord · Prompts de vérification et mentorat',
-  ctaLabel: 'Je construis mon activité',
-  ctaHref: '/contact',
+  ctaLabel: 'Me connecter à mon espace',
+  ctaHref: '/login',
   body: [
     blok('vitrine_hero', {
       eyebrow: 'Formation · De salarié à freelance',
@@ -751,8 +751,8 @@ const equipe = page({
   title: 'L’équipe Pragma — Manon, Camille, Julien et tes mentors',
   description:
     'Manon pour ton positionnement, Camille pour ton storytelling, Julien pour ton site, 4 mentors ex-élèves pour corriger chaque livrable sous 7 jours en mentorée.',
-  ctaLabel: 'Réserver un appel',
-  ctaHref: '/contact',
+  ctaLabel: 'Me connecter à mon espace',
+  ctaHref: '/login',
   body: [
     blok('vitrine_hero', {
       eyebrow: 'L’équipe Pragma',
@@ -860,8 +860,8 @@ const programme = page({
   title: 'Pragma en 9 parties : de ton expertise aux premiers clients',
   description:
     'Détail des 9 parties Pragma, correction sous 7 jours en mentorée, 4 h par semaine à côté de l’emploi, accès 18 mois. Appel découverte sur demande',
-  ctaLabel: 'Réserver un appel',
-  ctaHref: '/contact',
+  ctaLabel: 'Me connecter à mon espace',
+  ctaHref: '/login',
   body: [
     blok('vitrine_hero', {
       eyebrow: 'Le programme',
@@ -1069,9 +1069,8 @@ const contact = page({
   title: 'Contacter Pragma : une question avant de te lancer ?',
   description:
     'Une question sur le programme, les formules ou l’accès 18 mois. Réponse sous 2 jours ouvrés.',
-  ctaLabel: 'Réserver un appel',
-  ctaHref:
-    'mailto:bonjour@pragma-formation.fr?subject=R%C3%A9server%20un%20appel%20d%C3%A9couverte',
+  ctaLabel: 'Me connecter à mon espace',
+  ctaHref: '/login',
   body: [
     blok('vitrine_hero', {
       eyebrow: 'Contact',
@@ -1119,8 +1118,8 @@ const notfound = page({
   description:
     'Cette page n’existe pas ou a été déplacée. Retrouve le programme Pragma, l’équipe et le contact.',
   robots: 'noindex',
-  ctaLabel: 'Je construis mon activité',
-  ctaHref: '/contact',
+  ctaLabel: 'Me connecter à mon espace',
+  ctaHref: '/login',
   sitemap: false,
   body: [
     blok('vitrine_notfound', {
