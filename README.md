@@ -44,7 +44,7 @@ Create a `.env` file in the root directory:
 ```env
 # Required
 STORYBLOK_TOKEN=your_storyblok_public_token
-SITE_URL=https://yourdomain.com
+SITE_URL=https://www.pragma-formation.fr
 PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxx
 
@@ -66,6 +66,13 @@ Apply `supabase/migrations/002_eligible_otp.sql` after `001_learning.sql`.
 For local PKCE testing, request the OTP and open the email link in the same
 browser and on the same hostname used for the request. Do not switch between
 `localhost` and `127.0.0.1`, and do not copy the link to another browser/device.
+
+`SITE_URL` must be the public origin of the site (`https://www.pragma-formation.fr`),
+both locally and on Vercel. It sets Astro's `site` option and the trusted hosts
+for form POSTs; a missing or placeholder value breaks every form submission and
+sends magic links to the wrong host. Magic links land on `/auth/callback`, so add
+`https://www.pragma-formation.fr/auth/callback` to the Supabase Auth **Redirect
+URLs** allowlist.
 
 Supabase session cookies are HTTP-only and configured to persist for seven days.
 When a valid session cookie is present, visiting `/login` redirects directly to

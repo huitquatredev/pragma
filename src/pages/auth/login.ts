@@ -9,7 +9,10 @@ export const POST: APIRoute = async (context) => {
     return context.redirect(`/login?error=${encodeURIComponent('Adresse email invalide')}`);
   }
 
-  const redirectTo = new URL('/auth/callback', context.url);
+  // Build the magic link against the canonical site URL (not the request
+  // host) so it always points at the public `www` domain, even behind Vercel
+  // proxies or on preview deployments.
+  const redirectTo = new URL('/auth/callback', context.site ?? context.url);
   redirectTo.searchParams.set(
     'next',
     next.startsWith('/') && !next.startsWith('//') ? next : '/dashboard'

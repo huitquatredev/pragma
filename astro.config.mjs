@@ -12,20 +12,35 @@ const env = loadEnv(process.env.NODE_ENV || 'development', process.cwd(), '');
 
 const STORYBLOK_TOKEN = env.STORYBLOK_TOKEN || process.env.STORYBLOK_TOKEN;
 const STORYBLOK_REGION = env.STORYBLOK_REGION || process.env.STORYBLOK_REGION || 'eu';
-const SITE_URL = env.SITE_URL || process.env.SITE_URL || 'https://yourdomain.com';
 const IS_PREVIEW = env.IS_PREVIEW || process.env.IS_PREVIEW;
 const STORYBLOK_ENABLE_BRIDGE =
   env.STORYBLOK_ENABLE_BRIDGE || process.env.STORYBLOK_ENABLE_BRIDGE;
 
+// Canonical origin of the deployed site. Production lives on `www`, with the
+// apex domain redirecting there. A missing or placeholder SITE_URL used to
+// leave `site` on `https://yourdomain.com`, which made Astro reject every
+// form POST in production ("Cross-site POST form submissions are forbidden")
+// and sent magic links to the wrong host. Fall back to the real domain.
+const FALLBACK_SITE_URL = 'https://www.pragma-formation.fr';
+const SITE_URL = (() => {
+  const raw = (env.SITE_URL || process.env.SITE_URL || '').trim();
+  if (!raw || /yourdomain\.com/i.test(raw)) return FALLBACK_SITE_URL;
+  try {
+    return new URL(raw).origin;
+  } catch {
+    return FALLBACK_SITE_URL;
+  }
+})();
+
 // Hosts Astro must trust when reconstructing the request URL (origin check
 // for form POSTs). Without this, `context.url` falls back to localhost and
 // every form submission (login, logout, progress) gets a 403 in production.
-const SITE_HOST = (() => {
-  try {
-    return new URL(SITE_URL).hostname;
-  } catch {
-    return null;
-  }
+// Accept both the apex and the `www` host so the check passes whichever one
+// is configured in SITE_URL.
+const SITE_HOSTS = (() => {
+  const hostname = new URL(SITE_URL).hostname;
+  const sibling = hostname.startsWith('www.') ? hostname.slice(4) : `www.${hostname}`;
+  return [...new Set([hostname, sibling])];
 })();
 
 // https://astro.build/config
@@ -67,8 +82,8 @@ export default defineConfig({
 
   security: {
     allowedDomains: [
-      // Production / custom domain, from SITE_URL env.
-      ...(SITE_HOST ? [{ hostname: SITE_HOST }] : []),
+      // Production custom domain, apex and `www`, from SITE_URL env.
+      ...SITE_HOSTS.map((hostname) => ({ hostname })),
       // Vercel preview deployments (*.vercel.app).
       { hostname: '*.vercel.app' },
       // Local dev (any port).
