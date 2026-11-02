@@ -1046,15 +1046,19 @@ span.progress-index-part {
   margin-bottom: 0.6rem;
 }
 .carousel-btn {
+  display: inline-grid;
   flex: none;
+  place-items: center;
   width: 2.75rem;
   height: 2.75rem;
+  padding: 0;
   border-radius: 50%;
   border: 1.5px solid var(--pg-navy);
   background: var(--pg-card);
   color: var(--pg-navy);
   font-size: 1.2rem;
   font-weight: 800;
+  line-height: 1;
   cursor: pointer;
   transition:
     background 0.15s ease,
