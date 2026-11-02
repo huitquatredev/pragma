@@ -2,6 +2,7 @@
 import type { StoryblokStory } from '../../lib/storyblok';
 import type { Inscription } from '../../lib/supabase';
 import { stripLevelPrefix, oneBased } from '../../lib/titres';
+import CarouselArrow from './CarouselArrow.astro';
 import {
   countAccessible,
   getModuleStatus,
@@ -29,7 +30,7 @@ const active = parts.length > 0 ? Math.min(Math.max(current, 0), parts.length - 
       parts.length > 1 && (
         <div class="carousel-nav">
           <button type="button" class="carousel-btn" data-prev aria-label="Partie précédente">
-            ←
+            <CarouselArrow direction="left" />
           </button>
           <div class="carousel-dots" role="tablist" aria-label="Choisir une partie">
             {parts.map((part, partIndex) => (
@@ -47,7 +48,7 @@ const active = parts.length > 0 ? Math.min(Math.max(current, 0), parts.length - 
             Partie {(active ?? 0) + 1} / {parts.length}
           </p>
           <button type="button" class="carousel-btn" data-next aria-label="Partie suivante">
-            →
+            <CarouselArrow direction="right" />
           </button>
         </div>
       )

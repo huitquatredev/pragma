@@ -1,5 +1,6 @@
 ---
 import AppLayout from '../../layouts/AppLayout.astro';
+import CarouselArrow from '../../components/app/CarouselArrow.astro';
 import LockIcon from '../../components/app/LockIcon.astro';
 import ProgressIndex from '../../components/app/ProgressIndex.astro';
 import { fetchFormationIndex } from '../../lib/storyblok';
@@ -171,7 +172,7 @@ if (parts.length > 0) {
                   class="carousel-btn"
                   data-prev
                   aria-label="Livrable précédent">
-                  ←
+                  <CarouselArrow direction="left" />
                 </button>
                 <div class="carousel-dots" role="tablist" aria-label="Choisir un livrable">
                   {parts.map((part, partIndex) => (
@@ -193,7 +194,7 @@ if (parts.length > 0) {
                   Livrable {currentLivrable + 1} / {parts.length}
                 </p>
                 <button type="button" class="carousel-btn" data-next aria-label="Livrable suivant">
-                  →
+                  <CarouselArrow direction="right" />
                 </button>
               </div>
             )

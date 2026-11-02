@@ -1068,6 +1068,11 @@ span.progress-index-part {
   background: var(--pg-navy);
   color: #fff;
 }
+.carousel-arrow {
+  display: block;
+  width: 1.1rem;
+  height: 1.1rem;
+}
 .carousel-dots {
   display: flex;
   gap: 0.5rem;
