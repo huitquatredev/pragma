@@ -43,6 +43,10 @@ const SITE_HOSTS = (() => {
   return [...new Set([hostname, sibling])];
 })();
 
+// Only the public marketing pages belong in the sitemap; the learner area and
+// auth routes are private and must stay out of search results.
+const SITEMAP_PATHS = new Set(['/', '/contact', '/equipe', '/programme']);
+
 // https://astro.build/config
 export default defineConfig({
   output: 'server',
@@ -75,7 +79,12 @@ export default defineConfig({
         region: STORYBLOK_REGION,
       },
     }),
-    sitemap(),
+    sitemap({
+      filter: (page) => {
+        const pathname = new URL(page).pathname.replace(/\/+$/, '') || '/';
+        return SITEMAP_PATHS.has(pathname);
+      },
+    }),
   ],
 
   site: SITE_URL,
