@@ -34,15 +34,24 @@ export interface StoryblokStory {
 }
 
 export interface SectionText {
-  component: string;
+  component: 'section_text';
   titre?: string;
   corps?: unknown;
   bouton_text?: string;
   bouton_lien?: { url: string; linktype?: string };
 }
 
+export interface BlocCode {
+  component: 'bloc_code';
+  titre?: string;
+  langage?: string;
+  note?: string;
+  code?: string;
+}
+
 export type CoursBlok =
   | SectionText
+  | BlocCode
   | { component: 'bloc_comprendre'; titre?: string; corps?: unknown }
   | {
       component: 'bloc_quiz';
@@ -54,8 +63,16 @@ export type CoursBlok =
       bonne_reponse?: string;
       explication?: unknown;
     }
-  | { component: 'bloc_guide'; titre?: string; intro?: unknown; exemple_lea?: unknown; exemple_thomas?: unknown }
-  | { component: 'bloc_action'; titre?: string; consignes?: unknown; form_fields?: unknown[] };
+  | {
+      component: 'bloc_guide';
+      titre?: string;
+      intro?: unknown;
+      exemple_lea?: unknown;
+      exemple_thomas?: unknown;
+    }
+  | { component: 'bloc_action'; titre?: string; consignes?: unknown; form_fields?: unknown[] }
+  | { component: 'bloc_blueprint'; code?: string }
+  | { component: 'bloc_youtube'; url?: string; title?: string };
 
 export function getStoryblokApi() {
   return useStoryblokApi();

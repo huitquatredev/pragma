@@ -22,6 +22,7 @@ import BlocComprendre from '../../components/storyblok/BlocComprendre.astro';
 import BlocQuiz from '../../components/storyblok/BlocQuiz.astro';
 import BlocGuide from '../../components/storyblok/BlocGuide.astro';
 import BlocAction from '../../components/storyblok/BlocAction.astro';
+import BlocCode from '../../components/storyblok/BlocCode.astro';
 import BlocBlueprint from '../../components/storyblok/BlocBlueprint.astro';
 import BlocYoutube from '../../components/storyblok/BlocYoutube.astro';
 import { getCoursForm, hasForm } from '../../lib/livrables';
@@ -218,6 +219,7 @@ const cleanEnjeu = cleanRichText(enjeuCours);
         if (section.component === 'bloc_comprendre') return <BlocComprendre blok={section} />;
         if (section.component === 'bloc_quiz') return <BlocQuiz blok={section} />;
         if (section.component === 'bloc_guide') return <BlocGuide blok={section} />;
+        if (section.component === 'bloc_code') return <BlocCode blok={section} />;
         if (section.component === 'bloc_blueprint') return <BlocBlueprint blok={section} />;
         if (section.component === 'bloc_youtube') return <BlocYoutube blok={section} />;
         if (section.component === 'bloc_action')

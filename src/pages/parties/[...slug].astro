@@ -9,6 +9,7 @@ import BlocComprendre from '../../components/storyblok/BlocComprendre.astro';
 import BlocQuiz from '../../components/storyblok/BlocQuiz.astro';
 import BlocGuide from '../../components/storyblok/BlocGuide.astro';
 import BlocAction from '../../components/storyblok/BlocAction.astro';
+import BlocCode from '../../components/storyblok/BlocCode.astro';
 import {
   fetchStory,
   fetchFormationIndex,
@@ -107,6 +108,7 @@ const hasContext = hasRichText(enjeu) || hasRichText(objectifs) || hasRichText(l
         if (section.component === 'bloc_quiz') return <BlocQuiz blok={section} />;
         if (section.component === 'bloc_guide') return <BlocGuide blok={section} />;
         if (section.component === 'bloc_action') return <BlocAction blok={section} />;
+        if (section.component === 'bloc_code') return <BlocCode blok={section} />;
         const legacy = section as SectionText;
         return (
           <div class="section-text">
