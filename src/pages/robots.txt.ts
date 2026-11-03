@@ -27,9 +27,9 @@ const AI_AGENTS = [
 ];
 
 export const GET: APIRoute = ({ site }) => {
-  // The Storyblok preview deployment must never be crawled or indexed. It is
-  // additionally protected by Vercel Deployment Protection; this is a second
-  // layer in case that protection is ever disabled.
+  // The Storyblok preview deployment must never be crawled or indexed. Access
+  // is also limited to signed Visual Editor requests in the middleware; this
+  // is a second layer for requests that do reach the route.
   if (isPreviewDeployment()) {
     const groups = ['*', ...AI_AGENTS].map((agent) => `User-agent: ${agent}\nDisallow: /`);
 

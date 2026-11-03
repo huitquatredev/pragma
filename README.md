@@ -50,6 +50,7 @@ PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxx
 
 # Optional
 STORYBLOK_REGION=eu  # or 'us' for US region
+STORYBLOK_SPACE_ID=123456  # required to validate Visual Editor preview requests
 IS_PREVIEW=false     # set to 'true' for Storyblok preview mode
 STORYBLOK_ENABLE_BRIDGE=false # enable only when a Storyblok story exists for the preview
 SITE_NAME=Pragma
@@ -164,23 +165,40 @@ For preview deployments (visual editor support), configure a Vercel Preview URL 
 The preview deployment is the one built with `IS_PREVIEW=true` (e.g.
 `https://pragma-iota.vercel.app`). In that mode the application:
 
+- only serves requests signed by the Storyblok Visual Editor (see below),
 - sends `X-Robots-Tag: noindex, nofollow, noarchive, nosnippet` and a
   `<meta name="robots" content="noindex, nofollow, noarchive">` on every page,
 - serves a `robots.txt` with `Disallow: /` and explicit groups for AI crawlers,
 - answers known AI scrapers with a `404` at the middleware level,
 - generates no sitemap URLs.
 
-Those rules are defense in depth. For a hard access restriction, enable
-**Deployment Protection** in Vercel for the environment serving the preview
-domain, then enable **Protection Bypass for Automation** and append the
-secret to the Storyblok Visual Editor preview URL:
+**Access control (no paid Vercel plan needed).** Storyblok signs every
+Visual Editor iframe URL with `_storyblok_tk` parameters. The `token`
+parameter is not the preview token itself: it is
+`sha1(space_id:preview_access_token:timestamp)`, valid for one hour. The
+middleware recomputes that hash with the preview token from the environment
+and answers `404` when it does not match, so opening the preview domain
+directly shows nothing. The proof is kept in an HttpOnly cookie so
+navigation inside the editor keeps working.
 
-```text
-https://pragma-iota.vercel.app/?x-vercel-protection-bypass=<secret>&x-vercel-set-bypass-cookie=samesitenone
-```
+The check uses the two values already configured for Storyblok:
 
-`samesitenone` is required because the Visual Editor loads the site in an
-iframe. Rotate the bypass secret if it leaks.
+- `STORYBLOK_SPACE_ID` — the numeric space ID;
+- `STORYBLOK_TOKEN` — the space's **Preview** access token (not the public
+  token, and not the account-level management token).
+
+No extra variable is needed. The management token is only used by local
+scripts and never on Vercel. If the space has no Preview access token, the
+editor sends an empty signature and the preview is blocked. `localhost` and
+`127.0.0.1` are exempt while running `astro dev`, so local development stays
+usable. In browsers that block third-party cookies (Safari), in-iframe link
+navigation may ask for a reload; switching stories in the editor still works
+because Storyblok regenerates the signed URL.
+
+If you later upgrade to a paid Vercel plan, **Deployment Protection** with a
+**Protection Bypass for Automation** secret is still a useful extra layer:
+append `?x-vercel-protection-bypass=<secret>&x-vercel-set-bypass-cookie=samesitenone`
+to the Visual Editor preview URL.
 
 ## 🔍 SEO Features
 
