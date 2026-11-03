@@ -1,7 +1,10 @@
 ---
 import Analytics from '@vercel/analytics/astro';
+import { isPreviewDeployment } from '../lib/preview';
 
 const { seo } = Astro.props;
+
+const isPreview = isPreviewDeployment();
 
 // Guard against undefined seo
 const safeSeo = seo || {
@@ -40,7 +43,11 @@ const canonicalHref = (() => {
 
   {safeSeo.description && <meta name="description" content={safeSeo.description} />}
 
-  {safeSeo.robots && <meta name="robots" content={safeSeo.robots} />}
+  {
+    (isPreview || safeSeo.robots) && (
+      <meta name="robots" content={isPreview ? 'noindex, nofollow, noarchive' : safeSeo.robots} />
+    )
+  }
 
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="shortcut icon" href="/favicon.ico" />

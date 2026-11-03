@@ -159,6 +159,29 @@ The project is configured for Vercel deployment:
 
 For preview deployments (visual editor support), configure a Vercel Preview URL in Storyblok Settings > Visual Editor.
 
+### Storyblok preview deployment
+
+The preview deployment is the one built with `IS_PREVIEW=true` (e.g.
+`https://pragma-iota.vercel.app`). In that mode the application:
+
+- sends `X-Robots-Tag: noindex, nofollow, noarchive, nosnippet` and a
+  `<meta name="robots" content="noindex, nofollow, noarchive">` on every page,
+- serves a `robots.txt` with `Disallow: /` and explicit groups for AI crawlers,
+- answers known AI scrapers with a `404` at the middleware level,
+- generates no sitemap URLs.
+
+Those rules are defense in depth. For a hard access restriction, enable
+**Deployment Protection** in Vercel for the environment serving the preview
+domain, then enable **Protection Bypass for Automation** and append the
+secret to the Storyblok Visual Editor preview URL:
+
+```text
+https://pragma-iota.vercel.app/?x-vercel-protection-bypass=<secret>&x-vercel-set-bypass-cookie=samesitenone
+```
+
+`samesitenone` is required because the Visual Editor loads the site in an
+iframe. Rotate the bypass secret if it leaks.
+
 ## 🔍 SEO Features
 
 The project includes comprehensive SEO optimization:

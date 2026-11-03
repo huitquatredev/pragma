@@ -81,6 +81,8 @@ export default defineConfig({
     }),
     sitemap({
       filter: (page) => {
+        // A preview build must never publish a sitemap of production URLs.
+        if (IS_PREVIEW === 'true') return false;
         const pathname = new URL(page).pathname.replace(/\/+$/, '') || '/';
         return SITEMAP_PATHS.has(pathname);
       },
