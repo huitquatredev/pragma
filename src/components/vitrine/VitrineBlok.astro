@@ -10,6 +10,7 @@ import Team from './Team.astro';
 import Cta from './Cta.astro';
 import ContactBlock from './ContactBlock.astro';
 import NotFoundBlock from './NotFoundBlock.astro';
+import BlocHtml from '../storyblok/BlocHtml.astro';
 
 interface Props {
   blok: any;
@@ -29,6 +30,7 @@ const components: Record<string, any> = {
   vitrine_cta: Cta,
   vitrine_contact: ContactBlock,
   vitrine_notfound: NotFoundBlock,
+  html: BlocHtml,
 };
 
 const Component = components[blok.component];
