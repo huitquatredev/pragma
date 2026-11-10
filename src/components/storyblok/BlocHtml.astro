@@ -1,0 +1,28 @@
+---
+import { storyblokEditable } from '@storyblok/astro';
+
+interface Props {
+  blok: {
+    Embed?: string;
+    embed?: string;
+    html?: string;
+  };
+}
+
+const { blok } = Astro.props;
+const html = (blok.Embed ?? blok.embed ?? blok.html ?? '').trim();
+---
+
+{
+  html && (
+    <div {...storyblokEditable(blok)} class="bloc-html">
+      <Fragment set:html={html} />
+    </div>
+  )
+}
+
+<style>
+  .bloc-html {
+    width: 100%;
+  }
+</style>

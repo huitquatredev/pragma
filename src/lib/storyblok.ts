@@ -72,7 +72,8 @@ export type CoursBlok =
     }
   | { component: 'bloc_action'; titre?: string; consignes?: unknown; form_fields?: unknown[] }
   | { component: 'bloc_blueprint'; code?: string }
-  | { component: 'bloc_youtube'; url?: string; title?: string };
+  | { component: 'bloc_youtube'; url?: string; title?: string }
+  | { component: 'html'; Embed?: string; embed?: string; html?: string };
 
 export function getStoryblokApi() {
   return useStoryblokApi();

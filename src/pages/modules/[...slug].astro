@@ -5,7 +5,13 @@ import LockIcon from '../../components/app/LockIcon.astro';
 import ProgressBadge from '../../components/app/ProgressBadge.astro';
 import RichText from '../../components/app/RichText.astro';
 import { cleanRichText, hasRichText } from '../../lib/richtext';
-import { fetchStory, fetchStoriesByComponent, type SectionText } from '../../lib/storyblok';
+import BlocHtml from '../../components/storyblok/BlocHtml.astro';
+import {
+  fetchStory,
+  fetchStoriesByComponent,
+  type CoursBlok,
+  type SectionText,
+} from '../../lib/storyblok';
 import { stripLevelPrefix, oneBased } from '../../lib/titres';
 import { previewInscription } from '../../lib/supabase';
 import { getProgressIndex, hasCourseAccess } from '../../lib/progress';
@@ -122,21 +128,25 @@ const hasContext =
       )
     }
     {
-      ((story.content.body as SectionText[]) ?? []).map((section) => (
-        <div class="section-text">
-          {section.titre && <h2>{section.titre}</h2>}
-          {section.corps && (
-            <div class="rich-text">
-              <RichText document={section.corps} />
-            </div>
-          )}
-          {section.bouton_text && section.bouton_lien?.url && (
-            <a class="button" href={section.bouton_lien.url}>
-              {section.bouton_text}
-            </a>
-          )}
-        </div>
-      ))
+      ((story.content.body as CoursBlok[]) ?? []).map((section) => {
+        if (section.component === 'html') return <BlocHtml blok={section} />;
+        const legacy = section as SectionText;
+        return (
+          <div class="section-text">
+            {legacy.titre && <h2>{legacy.titre}</h2>}
+            {legacy.corps && (
+              <div class="rich-text">
+                <RichText document={legacy.corps} />
+              </div>
+            )}
+            {legacy.bouton_text && legacy.bouton_lien?.url && (
+              <a class="button" href={legacy.bouton_lien.url}>
+                {legacy.bouton_text}
+              </a>
+            )}
+          </div>
+        );
+      })
     }
     <ul class="content-list">
       {
