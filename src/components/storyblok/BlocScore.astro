@@ -1,0 +1,29 @@
+---
+import { storyblokEditable } from '@storyblok/astro';
+import RichText from '../app/RichText.astro';
+import { hasRichText, replaceRichTextToken } from '../../lib/richtext';
+
+interface Props {
+  blok: {
+    corps?: string | object;
+    texte?: string | object;
+  };
+}
+
+const { blok } = Astro.props;
+
+const rawScore = (Astro.url.searchParams.get('score') ?? '').trim();
+// Only accept a plain number: the value ends up in the rendered HTML.
+const score = /^-?\d+(?:[.,]\d+)?$/.test(rawScore) ? rawScore : '';
+const document = replaceRichTextToken(blok.corps ?? blok.texte, '@score', score);
+---
+
+{
+  hasRichText(document) && (
+    <div {...storyblokEditable(blok)} class="section-text bloc-score">
+      <div class="rich-text">
+        <RichText document={document} />
+      </div>
+    </div>
+  )
+}

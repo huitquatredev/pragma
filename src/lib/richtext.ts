@@ -122,6 +122,24 @@ export function cleanRichText(doc: unknown): unknown {
   return withoutInlineLabel(withoutLeadMarker(coerceToDoc(doc)));
 }
 
+/**
+ * Remplace un marqueur (ex. « @score ») dans toutes les chaînes d'un doc
+ * richtext — texte, liens et autres attributs.
+ */
+export function replaceRichTextToken(doc: unknown, token: string, value: string): unknown {
+  if (typeof doc === 'string') return doc.split(token).join(value);
+  if (Array.isArray(doc)) return doc.map((item) => replaceRichTextToken(item, token, value));
+  if (doc && typeof doc === 'object') {
+    return Object.fromEntries(
+      Object.entries(doc as Record<string, unknown>).map(([key, item]) => [
+        key,
+        replaceRichTextToken(item, token, value),
+      ])
+    );
+  }
+  return doc;
+}
+
 /** Vrai si le doc richtext contient du texte visible (récursif : paragraphes, listes, etc.). */
 export function hasRichText(doc: unknown): boolean {
   if (!doc) return false;
