@@ -62,7 +62,7 @@ function paragraphsToDoc(paragraphs: string[]): RichDoc {
     content: paragraphs
       .map((p) => (typeof p === 'string' ? p.trim() : ''))
       .filter((p) => p.length > 0)
-      .map((p) => ({ type: 'paragraph', content: [{ text: p }] })),
+      .map((p) => ({ type: 'paragraph', content: [{ type: 'text', text: p }] })),
   };
 }
 
@@ -71,7 +71,7 @@ function paragraphsToDoc(paragraphs: string[]): RichDoc {
  * are plain string arrays instead of Storyblok docs — render them as
  * paragraphs instead of crashing the resolver.
  */
-function coerceToDoc(doc: unknown): unknown {
+export function coerceToDoc(doc: unknown): unknown {
   if (typeof doc === 'string') return paragraphsToDoc([doc]);
   if (Array.isArray(doc)) {
     if (doc.length > 0 && doc.every((item) => typeof item === 'string')) {
