@@ -333,6 +333,14 @@ html {
   gap: clamp(1.5rem, 4vw, 4rem);
   align-items: start;
 }
+/* Without the aside note, stack the title above the prose. */
+.mk-split--no-note {
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(1rem, 2vw, 1.5rem);
+}
+.mk-split--no-note .mk-prose {
+  max-width: 56rem;
+}
 .mk-prose {
   display: grid;
   gap: 1rem;
@@ -345,6 +353,144 @@ html {
 }
 .mk-prose strong {
   color: var(--pg-navy);
+}
+.mk-prose a {
+  color: var(--pg-navy);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--pg-orange);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.15em;
+  transition:
+    color 0.15s ease,
+    text-decoration-color 0.15s ease;
+}
+.mk-prose a:hover {
+  color: var(--pg-orange);
+  text-decoration-color: currentColor;
+}
+/* Tailwind's preflight strips list markers, so richtext lists need their own. */
+.mk-prose ul,
+.mk-prose ol {
+  margin: 0;
+  padding-left: 1.4em;
+}
+.mk-prose ul {
+  list-style: none;
+  padding-left: 0;
+}
+.mk-prose ul > li {
+  position: relative;
+  padding-left: 1.4em;
+}
+.mk-prose ul > li::before {
+  content: '';
+  position: absolute;
+  left: 0.2em;
+  top: 0.72em;
+  width: 0.45em;
+  height: 0.45em;
+  background: var(--pg-orange);
+  border-radius: 2px;
+}
+.mk-prose ol {
+  list-style: decimal;
+}
+.mk-prose ol > li {
+  padding-left: 0.25em;
+}
+.mk-prose ol > li::marker {
+  color: var(--pg-orange);
+  font-weight: 700;
+}
+.mk-prose li + li {
+  margin-top: 0.45em;
+}
+.mk-prose table {
+  width: 100%;
+  border: 1px solid var(--pg-line);
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: var(--pg-radius-sm);
+  overflow: hidden;
+  font-size: 0.96rem;
+  line-height: 1.55;
+  font-variant-numeric: tabular-nums;
+}
+.mk-prose thead th {
+  background: var(--pg-navy);
+  color: #fff;
+  padding: 0.8rem 1rem;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-align: left;
+  text-transform: uppercase;
+}
+.mk-prose thead th:first-child {
+  border-top-left-radius: var(--pg-radius-sm);
+}
+.mk-prose thead th:last-child {
+  border-top-right-radius: var(--pg-radius-sm);
+}
+/* Storyblok renders the header row with <td>s, so promote the first row. */
+.mk-prose tbody tr:first-child td {
+  background: var(--pg-navy);
+  color: #fff;
+  padding: 0.8rem 1rem;
+  border-top: 0;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.mk-prose tbody tr:first-child td:first-child {
+  border-top-left-radius: var(--pg-radius-sm);
+}
+.mk-prose tbody tr:first-child td:last-child {
+  border-top-right-radius: var(--pg-radius-sm);
+}
+.mk-prose tbody tr:last-child td:first-child {
+  border-bottom-left-radius: var(--pg-radius-sm);
+}
+.mk-prose tbody tr:last-child td:last-child {
+  border-bottom-right-radius: var(--pg-radius-sm);
+}
+.mk-prose tbody tr:first-child td + td {
+  border-left-color: rgb(255 255 255 / 0.18);
+}
+.mk-prose tbody tr:first-child td strong,
+.mk-prose tbody tr:first-child td a {
+  color: inherit;
+}
+
+.mk-prose tbody th {
+  color: var(--pg-navy);
+  font-weight: 700;
+  text-align: left;
+}
+.mk-prose tbody th,
+.mk-prose tbody td {
+  padding: 0.8rem 1rem;
+  border-top: 1px solid var(--pg-line);
+  vertical-align: top;
+}
+.mk-prose tbody tr:nth-child(even) {
+  background: rgb(8 50 125 / 0.035);
+}
+.mk-prose tbody tr:hover {
+  background: var(--pg-orange-soft);
+}
+.mk-prose th + th,
+.mk-prose td + td {
+  border-left: 1px solid var(--pg-line);
+}
+.mk-prose caption {
+  caption-side: bottom;
+  padding-top: 0.65rem;
+  color: var(--pg-muted);
+  font-size: 0.85rem;
+  text-align: left;
 }
 .mk-note {
   padding-left: 1.1rem;

@@ -61,7 +61,7 @@ export function contactEmail(): string {
   return (
     process.env.CONTACT_EMAIL ||
     import.meta.env.CONTACT_EMAIL ||
-    'bonjour@pragma-formation.fr'
+    'contact@pragma-formation.fr'
   ).trim();
 }
 

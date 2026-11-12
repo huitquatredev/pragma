@@ -10,19 +10,25 @@ interface Props {
 const { blok } = Astro.props;
 const items = lines(blok.list_items);
 const rail = lines(blok.rail_items);
+const hasHeading = Boolean(blok.eyebrow || blok.title || blok.note);
+const titleId = `${blok.anchor || 'text'}-title`;
 ---
 
 <section
   class="mk-section"
   id={blok.anchor || undefined}
   {...storyblokEditable(blok)}
-  aria-labelledby={`${blok.anchor || 'text'}-title`}>
-  <div class="mk-split">
-    <div>
-      {blok.eyebrow && <p class="eyebrow">{blok.eyebrow}</p>}
-      <h2 id={`${blok.anchor || 'text'}-title`}>{blok.title}</h2>
-      {blok.note && <p class="mk-note">{blok.note}</p>}
-    </div>
+  aria-labelledby={blok.title ? titleId : undefined}>
+  <div class:list={['mk-split', !blok.note && 'mk-split--no-note']}>
+    {
+      hasHeading && (
+        <div>
+          {blok.eyebrow && <p class="eyebrow">{blok.eyebrow}</p>}
+          {blok.title && <h2 id={titleId}>{blok.title}</h2>}
+          {blok.note && <p class="mk-note">{blok.note}</p>}
+        </div>
+      )
+    }
     <div class="mk-prose">
       {blok.body && <RichText document={blok.body} />}
       {
