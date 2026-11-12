@@ -8,10 +8,19 @@ interface Props {
   partieId: string;
   sections: FormSection[];
   initial?: Record<string, unknown>;
+  /** Values from earlier cours, used by formulas that reference their fields. */
+  baseValues?: Record<string, unknown>;
   showDelete?: boolean;
 }
 
-const { coursId, partieId, sections, initial = {}, showDelete = false } = Astro.props;
+const {
+  coursId,
+  partieId,
+  sections,
+  initial = {},
+  baseValues = {},
+  showDelete = false,
+} = Astro.props;
 const formId = `livrable-form-${coursId}`;
 
 function str(key: string): string {
@@ -25,7 +34,8 @@ function str(key: string): string {
   class="livrable-form"
   data-cours-id={coursId}
   data-partie-id={partieId}
-  data-saved={JSON.stringify(initial)}>
+  data-saved={JSON.stringify(initial)}
+  data-base-values={JSON.stringify(baseValues)}>
   {
     sections.map((section) => (
       <fieldset class="livrable-section">

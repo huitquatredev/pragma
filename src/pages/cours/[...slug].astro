@@ -26,7 +26,13 @@ import BlocCode from '../../components/storyblok/BlocCode.astro';
 import BlocBlueprint from '../../components/storyblok/BlocBlueprint.astro';
 import BlocYoutube from '../../components/storyblok/BlocYoutube.astro';
 import BlocHtml from '../../components/storyblok/BlocHtml.astro';
-import { getCoursForm, hasForm } from '../../lib/livrables';
+import {
+  allFormFields,
+  evaluateDisplays,
+  getCoursForm,
+  hasForm,
+  mergePartieAnswers,
+} from '../../lib/livrables';
 import { stripLevelPrefix, oneBased } from '../../lib/titres';
 
 const isPreview = process.env.IS_PREVIEW === 'true' || import.meta.env.IS_PREVIEW === 'true';
@@ -146,20 +152,42 @@ const coursHasForm = hasForm(coursSections);
 const partieId = parentPart?.uuid ?? '';
 
 let initialAnswers: Record<string, unknown> = {};
+let baseValues: Record<string, unknown> = {};
 if (coursHasForm && !isPreview && Astro.locals.supabase && Astro.locals.user) {
   try {
     const { data } = await Astro.locals.supabase
       .from('form_answers')
-      .select('payload')
-      .eq('user_id', Astro.locals.user.id)
-      .eq('cours_id', story.uuid)
-      .maybeSingle();
-    const payload = (data as { payload?: unknown } | null)?.payload;
-    if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
-      initialAnswers = payload as Record<string, unknown>;
+      .select('cours_id, payload')
+      .eq('user_id', Astro.locals.user.id);
+    const answers: Record<string, Record<string, unknown>> = {};
+    for (const row of (data as { cours_id: string; payload?: unknown }[] | null) ?? []) {
+      const payload = row.payload;
+      if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
+        answers[row.cours_id] = payload as Record<string, unknown>;
+      }
+    }
+    initialAnswers = answers[story.uuid] ?? {};
+
+    // Displays from earlier cours (e.g. the annual revenue target) are not
+    // stored in form_answers, so recompute them here. This lets formulas on
+    // this cours reference fields filled in previous cours.
+    const previousCourses = position > 0 ? courses.slice(0, position) : [];
+    const previousIds = previousCourses.map((course) => course.uuid);
+    if (previousIds.length > 0) {
+      const previousForms = Object.fromEntries(
+        previousCourses.map((course) => [course.uuid, getCoursForm(course)])
+      );
+      const merged = mergePartieAnswers(previousIds, answers);
+      const displayDefs = previousIds.flatMap((id) =>
+        allFormFields(previousForms[id] ?? [])
+          .filter((field) => field.kind === 'display' && field.formula)
+          .map((field) => ({ key: field.key, formula: field.formula as string }))
+      );
+      baseValues = { ...merged, ...evaluateDisplays(displayDefs, merged) };
     }
   } catch {
     initialAnswers = {};
+    baseValues = {};
   }
 }
 
@@ -231,6 +259,7 @@ const cleanEnjeu = cleanRichText(enjeuCours);
               coursId={story.uuid}
               partieId={partieId}
               initial={initialAnswers}
+              baseValues={baseValues}
             />
           );
         const legacy = section as SectionText;

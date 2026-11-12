@@ -13,25 +13,32 @@ interface Props {
   coursId?: string;
   partieId?: string;
   initial?: Record<string, unknown>;
+  baseValues?: Record<string, unknown>;
 }
 
-const { blok, coursId, partieId, initial = {} } = Astro.props;
+const { blok, coursId, partieId, initial = {}, baseValues = {} } = Astro.props;
 const sections = parseFormFields(blok.form_fields ?? []);
 const showForm = Boolean(coursId && partieId && sections.some((s) => s.fields.length > 0));
 ---
+
 <div class="section-text bloc-action">
   <h2>{blok.titre || 'À toi de jouer'}</h2>
-  {blok.consignes && (
-    <div class="rich-text">
-      <RichText document={cleanRichText(blok.consignes)} />
-    </div>
-  )}
-  {showForm && (
-    <CoursForm
-      coursId={coursId!}
-      partieId={partieId!}
-      sections={sections}
-      initial={initial}
-    />
-  )}
+  {
+    blok.consignes && (
+      <div class="rich-text">
+        <RichText document={cleanRichText(blok.consignes)} />
+      </div>
+    )
+  }
+  {
+    showForm && (
+      <CoursForm
+        coursId={coursId!}
+        partieId={partieId!}
+        sections={sections}
+        initial={initial}
+        baseValues={baseValues}
+      />
+    )
+  }
 </div>

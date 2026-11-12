@@ -19,6 +19,22 @@ function savedPayload(form: HTMLFormElement): Record<string, unknown> {
   }
 }
 
+/** Values from earlier cours (including their computed displays). */
+function baseValues(form: HTMLFormElement): Record<string, string> {
+  try {
+    const raw: unknown = JSON.parse(form.dataset.baseValues || '{}');
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+    const values: Record<string, string> = {};
+    for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+      if (typeof value === 'string') values[key] = value;
+      else if (typeof value === 'number') values[key] = String(value);
+    }
+    return values;
+  } catch {
+    return {};
+  }
+}
+
 function namedInputs(form: HTMLFormElement): (HTMLInputElement | HTMLTextAreaElement)[] {
   return [...form.querySelectorAll('[name]')].filter(
     (el): el is HTMLInputElement | HTMLTextAreaElement =>
@@ -46,9 +62,11 @@ function enhanceForm(form: HTMLFormElement) {
     if (typeof value === 'string' || typeof value === 'number') el.value = String(value);
   }
 
-  // Live values of this form (textareas, numbers, sliders, urls, images).
+  // Live values of this form (textareas, numbers, sliders, urls, images),
+  // seeded with earlier-cours values so cross-cours formulas resolve.
+  const base = baseValues(form);
   const scopeValues = (): Record<string, string> => {
-    const values: Record<string, string> = {};
+    const values: Record<string, string> = { ...base };
     for (const el of namedInputs(form)) {
       if (el instanceof HTMLInputElement && el.type === 'file') continue;
       const key = el.getAttribute('name');
