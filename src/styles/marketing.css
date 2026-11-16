@@ -1412,6 +1412,26 @@ html {
   line-height: 1.6;
   color: var(--pg-navy-ink);
 }
+/* Tailwind's preflight removes link decoration inside richtext bios. */
+.team-card__bio a,
+.mentor-card__bio a,
+.support-card__bio a {
+  color: var(--pg-navy);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--pg-orange);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.15em;
+  transition:
+    color 0.15s ease,
+    text-decoration-color 0.15s ease;
+}
+.team-card__bio a:hover,
+.mentor-card__bio a:hover,
+.support-card__bio a:hover {
+  color: var(--pg-orange);
+  text-decoration-color: currentColor;
+}
 
 /* Programme page -------------------------------------------------------- */
 
