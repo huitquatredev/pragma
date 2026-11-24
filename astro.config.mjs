@@ -45,7 +45,7 @@ const SITE_HOSTS = (() => {
 
 // Only the public marketing pages belong in the sitemap; the learner area and
 // auth routes are private and must stay out of search results.
-const SITEMAP_PATHS = new Set(['/', '/contact', '/equipe', '/programme']);
+const SITEMAP_PATHS = new Set(['/', '/contact', '/equipe', '/programme', '/acheter']);
 
 // https://astro.build/config
 export default defineConfig({

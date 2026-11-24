@@ -8,10 +8,22 @@ interface Props {
 
 const { blok } = Astro.props;
 const cards = blok.cards ?? [];
+const showPaymentToggle = Boolean(blok.show_payment_toggle);
+
+const cancelNotice = showPaymentToggle && Astro.url.searchParams.get('annule') === '1';
+const errorCode = showPaymentToggle ? Astro.url.searchParams.get('erreur') : null;
+const errorMessages: Record<string, string> = {
+  configuration:
+    'Le paiement n’est pas encore disponible. Écris-nous à contact@pragma-formation.fr et nous t’accompagnons.',
+  paiement: 'Le paiement n’a pas pu être lancé. Réessaie dans un instant.',
+  formule: 'Merci de choisir une formule et un mode de paiement.',
+  requete: 'La demande de paiement est invalide. Réessaie depuis cette page.',
+};
+const errorNotice = errorCode ? (errorMessages[errorCode] ?? errorMessages.requete) : null;
 ---
 
 <section
-  class="mk-section mk-pricing"
+  class:list={['mk-section', 'mk-pricing', showPaymentToggle && 'buy-section']}
   id={blok.anchor || undefined}
   {...storyblokEditable(blok)}
   aria-labelledby={`${blok.anchor || 'pricing'}-title`}>
@@ -19,30 +31,115 @@ const cards = blok.cards ?? [];
   <h2 id={`${blok.anchor || 'pricing'}-title`}>{blok.title}</h2>
   {blok.intro && <p class="mk-lede">{blok.intro}</p>}
 
-  <div class="mk-price-grid">
+  {
+    cancelNotice && (
+      <p class="buy-notice" role="status">
+        Paiement annulé. Tu peux choisir ta formule quand tu veux, sans engagement.
+      </p>
+    )
+  }
+  {
+    errorNotice && (
+      <p class="buy-notice buy-notice--error" role="alert">
+        {errorNotice}
+      </p>
+    )
+  }
+
+  {
+    showPaymentToggle && (
+      <div class="buy-toggle">
+        <span class="buy-toggle__label" id="payment-mode-label">
+          {blok.payment_label || 'Paiement'}
+        </span>
+        <div class="buy-toggle__options" role="radiogroup" aria-labelledby="payment-mode-label">
+          <input type="radio" name="payment-mode" id="pay-once" value="once" checked />
+          <label for="pay-once">{blok.payment_once_label || 'En 1 fois'}</label>
+          <input type="radio" name="payment-mode" id="pay-monthly" value="monthly" />
+          <label for="pay-monthly">{blok.payment_monthly_label || 'En 10 fois'}</label>
+        </div>
+      </div>
+    )
+  }
+
+  <div class="mk-price-grid buy-price-grid">
     {
       cards.map((card: any) => (
         <article
-          class:list={['mk-price', card.featured && 'mk-price--featured']}
+          class:list={[
+            'mk-price',
+            card.plan_key && 'buy-plan',
+            card.featured && 'mk-price--featured',
+          ]}
           {...storyblokEditable(card)}>
           {card.badge && <span class="mk-price__badge">{card.badge}</span>}
           <div>
             <h3>{card.name}</h3>
             {card.lede && <p class="mk-price__lede">{card.lede}</p>}
           </div>
-          <p class="mk-price__amount">
-            {card.price}
-            {card.price_note && <small>{card.price_note}</small>}
-          </p>
+
+          {card.price_monthly ? (
+            <div class="buy-price">
+              <p class="mk-price__amount buy-price--once">
+                {card.price}
+                {card.price_note && <small>{card.price_note}</small>}
+              </p>
+              <p class="mk-price__amount buy-price--monthly">
+                {card.price_monthly}
+                <small>
+                  {card.price_monthly_note || 'par mois'}
+                  {card.price_monthly_total && <span>{card.price_monthly_total}</span>}
+                </small>
+              </p>
+            </div>
+          ) : (
+            <p class="mk-price__amount">
+              {card.price}
+              {card.price_note && <small>{card.price_note}</small>}
+            </p>
+          )}
+
           <ul>
             {lines(card.features).map((feature) => (
               <li>{feature}</li>
             ))}
           </ul>
-          {card.cta_label && (
-            <a class="button" href={linkHref(card.cta_link)}>
-              {card.cta_label}
-            </a>
+
+          {card.plan_key ? (
+            <div class="buy-plan__cta">
+              <form
+                class="buy-cta buy-cta--once"
+                method="POST"
+                action="/api/checkout"
+                data-plan={card.plan_key}
+                data-payment="once">
+                <input type="hidden" name="plan" value={card.plan_key} />
+                <input type="hidden" name="payment" value="once" />
+                <button class="button" type="submit">
+                  {card.cta_label || 'Acheter'} · {card.price}
+                </button>
+              </form>
+              {card.price_monthly && (
+                <form
+                  class="buy-cta buy-cta--monthly"
+                  method="POST"
+                  action="/api/checkout"
+                  data-plan={card.plan_key}
+                  data-payment="monthly">
+                  <input type="hidden" name="plan" value={card.plan_key} />
+                  <input type="hidden" name="payment" value="monthly" />
+                  <button class="button" type="submit">
+                    {card.cta_label || 'Acheter'} · {card.price_monthly}/mois
+                  </button>
+                </form>
+              )}
+            </div>
+          ) : (
+            card.cta_label && (
+              <a class="button" href={linkHref(card.cta_link)}>
+                {card.cta_label}
+              </a>
+            )
           )}
         </article>
       ))

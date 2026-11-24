@@ -35,6 +35,7 @@ const pathname = Astro.url.pathname.replace(/\/+$/, '') || '/';
 const navLinks = [
   { href: '/equipe', label: 'L’équipe' },
   { href: '/programme', label: 'Le programme' },
+  { href: '/acheter', label: 'Acheter' },
   { href: '/contact', label: 'Contact' },
 ];
 ---
@@ -115,7 +116,7 @@ const navLinks = [
           <div class="mk-footer__col">
             <p>Programme</p>
             <a href="/programme">Le programme</a>
-            <a href="/#formules">Les formules</a>
+            <a href="/acheter">Acheter la formation</a>
             <a href="/#faq">Questions fréquentes</a>
           </div>
           <div class="mk-footer__col">

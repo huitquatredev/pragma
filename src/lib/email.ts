@@ -3,12 +3,17 @@ export interface EmailMessage {
   subject: string;
   html: string;
   text: string;
+  replyTo?: string;
 }
 
 /**
  * Envoi via Resend (HTTP, sans dépendance). Sans RESEND_API_KEY, l'email est
  * journalisé et la soumission reste enregistrée — à configurer sur Vercel.
  */
+export function isEmailConfigured(): boolean {
+  return Boolean(process.env.RESEND_API_KEY || import.meta.env.RESEND_API_KEY);
+}
+
 export async function sendEmail(email: EmailMessage): Promise<{ sent: boolean; reason?: string }> {
   const apiKey = process.env.RESEND_API_KEY || import.meta.env.RESEND_API_KEY;
   const from =
@@ -32,6 +37,7 @@ export async function sendEmail(email: EmailMessage): Promise<{ sent: boolean; r
       subject: email.subject,
       html: email.html,
       text: email.text,
+      ...(email.replyTo ? { reply_to: email.replyTo } : {}),
     }),
   });
   if (!res.ok) {

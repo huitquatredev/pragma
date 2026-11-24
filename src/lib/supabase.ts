@@ -1,7 +1,29 @@
 import { createServerClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import type { APIContext } from 'astro';
 
 const SESSION_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
+
+/**
+ * Service-role client, reserved for server-side jobs such as the Stripe
+ * webhook. Never expose the key to the browser.
+ */
+export function createSupabaseAdminClient() {
+  const url = process.env.PUBLIC_SUPABASE_URL || import.meta.env.PUBLIC_SUPABASE_URL;
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SECRET_KEY ||
+    import.meta.env.SUPABASE_SERVICE_ROLE_KEY ||
+    import.meta.env.SUPABASE_SECRET_KEY;
+
+  if (!url || !key) {
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY (ou SUPABASE_SECRET_KEY) manquant.');
+  }
+
+  return createClient(url, key, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+}
 
 export function createSupabaseServerClient(context: APIContext) {
   const publishableKey =

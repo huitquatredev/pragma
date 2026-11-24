@@ -236,12 +236,16 @@ const componentDefs = [
     fields: {
       name: text('Nom de la formule'),
       lede: area('Accroche'),
-      price: text('Prix'),
-      price_note: text('Précision de prix'),
+      price: text('Prix en 1 fois'),
+      price_note: text('Précision du prix en 1 fois'),
+      price_monthly: text('Prix en 10 fois (par mois)'),
+      price_monthly_note: text('Précision du prix en 10 fois'),
+      price_monthly_total: text('Total du paiement en 10 fois'),
+      plan_key: option('Clé Stripe (active le paiement)', 'vitrine_plan_keys'),
       badge: text('Badge'),
       features: area('Inclus (une ligne par item)'),
       cta_label: text('CTA — libellé'),
-      cta_link: multilink('CTA — lien'),
+      cta_link: multilink('CTA — lien (si pas de clé Stripe)'),
       featured: bool('Mettre en avant'),
     },
   },
@@ -254,6 +258,10 @@ const componentDefs = [
       title: text('Titre'),
       intro: area('Introduction'),
       note: area('Note sous les cartes'),
+      show_payment_toggle: bool('Afficher le choix 1x / 10x'),
+      payment_label: text('Choix du paiement — libellé'),
+      payment_once_label: text('Choix 1 fois — libellé'),
+      payment_monthly_label: text('Choix 10 fois — libellé'),
       cards: blocks('Formules', ['vitrine_price']),
       anchor: text('Ancre HTML'),
     },
@@ -441,6 +449,14 @@ const datasourceDefs = [
       ['Soutien', 'support'],
     ],
   },
+  {
+    name: 'Vitrine — clés de formule',
+    slug: 'vitrine_plan_keys',
+    entries: [
+      ['Autonome', 'autonome'],
+      ['Mentorée', 'mentoree'],
+    ],
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -490,7 +506,16 @@ const plan = blok('vitrine_plan', {
   foot_right: '300 h',
 });
 
-const page = ({ title, description, robots = 'all', ctaLabel, ctaHref, body, sitemap = true }) => ({
+const page = ({
+  title,
+  description,
+  robots = 'all',
+  ctaLabel,
+  ctaHref,
+  body,
+  sitemap = true,
+  schema = null,
+}) => ({
   component: 'vitrine_page',
   _uid: U(),
   title,
@@ -499,6 +524,7 @@ const page = ({ title, description, robots = 'all', ctaLabel, ctaHref, body, sit
   cta_label: ctaLabel,
   cta_link: L(ctaHref),
   sitemap,
+  schema,
   body,
 });
 
@@ -1142,10 +1168,223 @@ const notfound = page({
   ],
 });
 
+const acheter = page({
+  title: 'Acheter la formation Pragma — Autonome ou Mentorée',
+  description:
+    'Rejoins la formation Pragma en formule Autonome (490 € ou 59 €/mois) ou Mentorée (2 190 € ou 239 €/mois). 9 parties, 9 livrables, 18 mois d’accès.',
+  ctaLabel: 'Choisir ma formule',
+  ctaHref: '#formules',
+  schema: JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: 'Formation Pragma',
+    description:
+      'La méthode complète pour structurer ton offre, mettre ton site en ligne et signer tes premiers clients.',
+    brand: { '@type': 'Brand', name: 'Pragma' },
+    offers: [
+      {
+        '@type': 'Offer',
+        name: 'Formule Autonome',
+        price: '490',
+        priceCurrency: 'EUR',
+        url: 'https://www.pragma-formation.fr/acheter',
+      },
+      {
+        '@type': 'Offer',
+        name: 'Formule Mentorée',
+        price: '2190',
+        priceCurrency: 'EUR',
+        url: 'https://www.pragma-formation.fr/acheter',
+      },
+    ],
+  }),
+  body: [
+    blok('vitrine_hero', {
+      eyebrow: 'Formation Pragma · Early Tickets 2026',
+      title: 'Choisis ta formule. ',
+      accent: 'Construis ton activité.',
+      lede: 'La méthode complète pour structurer ton offre, mettre ton site en ligne et signer tes premiers clients. 9 parties, 9 livrables, 18 mois pour avancer à ton rythme, à côté de ton emploi.',
+      primary_label: 'Voir les formules',
+      primary_link: L('#formules'),
+      secondary_label: 'Voir le programme',
+      secondary_link: L('/programme'),
+      note: 'Tarifs Early Tickets 2026 · +100 € dès 2027 · Paiement en 1 fois ou en 10 fois',
+      plan: [
+        blok('vitrine_plan', {
+          top_left: 'La formation',
+          top_right: 'Pragma',
+          items: [
+            ['9', 'parties'],
+            ['9', 'livrables'],
+            ['18', 'mois d’accès'],
+            ['4 h', 'par semaine'],
+            ['100 %', 'asynchrone'],
+            ['5', 'places mentorées / mois'],
+          ].map(([number, label]) => blok('vitrine_plan_item', { number, label })),
+          foot_left: 'À partir de',
+          foot_right: '490 € ou 59 €/mois',
+        }),
+      ],
+    }),
+    blok('vitrine_pricing', {
+      eyebrow: 'Les formules',
+      title: 'Choisis ton niveau d’accompagnement',
+      intro:
+        'Le même programme, deux niveaux de suivi. Tu peux régler en une fois ou en 10 mensualités.',
+      note: '*Tarifs Early Tickets 2026. +100 € dès 2027. Accès 18 mois dès l’inscription. Le suivi mentoré démarre le 1er du mois suivant, dans la limite de 5 places par mois. Paiement sécurisé par Stripe.',
+      show_payment_toggle: true,
+      payment_label: 'Paiement',
+      payment_once_label: 'En 1 fois',
+      payment_monthly_label: 'En 10 fois',
+      cards: [
+        blok('vitrine_price', {
+          name: 'Autonome',
+          lede: 'Pour avancer en indépendance. Tu embarques quand c’est le moment pour toi.',
+          price: '490 €',
+          price_note: 'en une fois',
+          price_monthly: '59 €',
+          price_monthly_note: 'par mois pendant 10 mois',
+          price_monthly_total: 'soit 590 € au total',
+          plan_key: 'autonome',
+          features:
+            'Les 9 parties du programme et ses mises à jour\nLes prompts de vérification pour avancer en solo\nLes masterclass en direct avec replay\nLa communauté Discord Pragma',
+          cta_label: 'Acheter',
+        }),
+        blok('vitrine_price', {
+          name: 'Mentorée',
+          lede: 'Pour un suivi fiable sur chaque décision. 5 places par mois pour garantir la correction sous 7 jours.',
+          price: '2 190 €',
+          price_note: 'en une fois',
+          price_monthly: '239 €',
+          price_monthly_note: 'par mois pendant 10 mois',
+          price_monthly_total: 'soit 2 390 € au total',
+          plan_key: 'mentoree',
+          badge: 'Recommandée · 5 places par mois',
+          features:
+            'Tout le contenu Autonome inclus\nLa correction de chaque livrable sous 7 jours, en audio et vidéo\n2 permanences en visio par mois avec un formateur\nUn plan de reprise de 30 min si tu t’arrêtes 3 semaines',
+          cta_label: 'Acheter',
+          featured: true,
+        }),
+      ],
+      anchor: 'formules',
+    }),
+    blok('vitrine_cards', {
+      eyebrow: 'La méthode',
+      title: 'Tu repars avec 9 livrables, pas des notes de cours',
+      intro:
+        'Chaque partie se termine par un livrable concret. Tu vérifies ton travail seul ou tu le fais corriger, puis tu passes à la suite avec une base validée.',
+      variant: 'steps',
+      cards: [
+        blok('vitrine_card', {
+          title: 'Tu construis',
+          text: 'Tu suis les cours et tu remplis les formulaires : ton livrable se construit au fil de l’eau, appliqué à ton propre projet.',
+        }),
+        blok('vitrine_card', {
+          title: 'Tu vérifies',
+          text: 'En Autonome, les prompts de vérification te donnent les critères pour avancer seul. En Mentorée, un formateur corrige ton livrable en audio et vidéo sous 7 jours.',
+        }),
+        blok('vitrine_card', {
+          title: 'Tu avances',
+          text: 'Tu passes à la partie suivante avec une base validée, jusqu’à ton site en ligne et tes premiers clients contactés.',
+        }),
+      ],
+      anchor: 'methode',
+    }),
+    blok('vitrine_faq', {
+      eyebrow: 'Questions fréquentes',
+      title: 'Avant de choisir',
+      items: [
+        blok('vitrine_faq_item', {
+          question: 'Quelle différence entre la formule Autonome et la Mentorée ?',
+          answer: P(
+            'L’Autonome contient les 9 parties du programme, les prompts de vérification, les masterclass et le Discord. La Mentorée ajoute la correction de chaque livrable sous 7 jours, en audio et vidéo, 2 permanences en visio par mois avec un formateur et un plan de reprise de 30 min si tu t’arrêtes 3 semaines.'
+          ),
+        }),
+        blok('vitrine_faq_item', {
+          question: 'Comment fonctionne le paiement en 10 fois ?',
+          answer: P(
+            'Le prix est réparti sur 10 mensualités : 59 €/mois pour l’Autonome (590 € au total) et 239 €/mois pour la Mentorée (2 390 € au total). Tu choisis le paiement en 1 fois ou en 10 fois au moment de l’achat. L’abonnement s’arrête automatiquement après la 10e mensualité, sans démarche de ta part.'
+          ),
+        }),
+        blok('vitrine_faq_item', {
+          question: 'Combien de temps ai-je accès à la formation ?',
+          answer: P('Ton accès est de 18 mois à compter de l’inscription.'),
+        }),
+        blok('vitrine_faq_item', {
+          question: 'Quand démarre le suivi mentoré ?',
+          answer: P(
+            'Le suivi mentoré démarre le 1er du mois suivant ton inscription, dans la limite de 5 places par mois. Quand les 5 places sont prises, tu attends le mois suivant.'
+          ),
+        }),
+        blok('vitrine_faq_item', {
+          question: 'Et si je prends du retard ?',
+          answer: P(
+            'Tu avances à ton rythme pendant 18 mois. En Mentorée, si tu t’arrêtes 3 semaines, ton formateur te propose un plan de reprise de 30 min.'
+          ),
+        }),
+      ],
+      anchor: 'faq',
+    }),
+    blok('vitrine_cta', {
+      title: 'Tu sais quelle formule te correspond ?',
+      text: 'Choisis ton paiement en 1 fois ou en 10 fois. Une question avant de te lancer ? Écris-nous, on te répond sous 2 jours ouvrés.',
+      primary_label: 'Choisir ma formule',
+      primary_link: L('#formules'),
+      secondary_label: 'Poser une question',
+      secondary_link: L('/contact'),
+      wide: true,
+      anchor: 'acheter',
+    }),
+  ],
+});
+
+const merci = page({
+  title: 'Merci — Pragma',
+  description: 'Ton paiement est confirmé. Retrouve ton espace apprenant Pragma.',
+  robots: 'noindex',
+  ctaLabel: 'Accéder à mon espace',
+  ctaHref: '/login',
+  sitemap: false,
+  body: [
+    blok('vitrine_hero', {
+      eyebrow: 'Paiement confirmé',
+      title: 'Bienvenue chez Pragma.',
+      lede: 'Ta place est réservée et ton paiement a bien été pris en compte. Tu vas recevoir un email de bienvenue avec toutes les informations pour commencer.',
+      primary_label: 'Accéder à mon espace',
+      primary_link: L('/login'),
+      secondary_label: 'Poser une question',
+      secondary_link: L('/contact'),
+      note: 'L’activation peut prendre quelques secondes. Si ta connexion échoue, patiente une minute puis réessaie.',
+    }),
+    blok('vitrine_cards', {
+      eyebrow: 'Prochaines étapes',
+      title: 'Ce qui se passe maintenant',
+      variant: 'steps',
+      cards: [
+        blok('vitrine_card', {
+          title: 'Vérifie ta boîte mail',
+          text: 'Le mail de bienvenue contient ton lien de connexion et le récapitulatif de ton accès.',
+        }),
+        blok('vitrine_card', {
+          title: 'Connecte-toi',
+          text: 'Utilise l’adresse email saisie chez Stripe. Tu recevras un lien de connexion, sans mot de passe.',
+        }),
+        blok('vitrine_card', {
+          title: 'Commence la partie 0',
+          text: 'Ton espace t’indique par où démarrer et le premier livrable à construire.',
+        }),
+      ],
+      anchor: 'etapes',
+    }),
+  ],
+});
+
 const stories = [
   { slug: 'home', name: 'Accueil', content: home },
   { slug: 'equipe', name: 'Équipe', content: equipe },
   { slug: 'programme', name: 'Programme', content: programme },
+  { slug: 'acheter', name: 'Acheter la formation', content: acheter },
+  { slug: 'acheter-merci', name: 'Merci — Pragma', content: merci },
   { slug: 'contact', name: 'Contact', content: contact },
   { slug: '404', name: 'Page introuvable', content: notfound },
 ];
@@ -1256,10 +1495,15 @@ const allStories = await listAllStories();
 const bySlug = new Map(allStories.map((story) => [story.full_slug, story]));
 
 for (const def of stories) {
-  const existing = bySlug.get(def.slug);
+  const fullSlug = def.parent ? `${def.parent}/${def.slug}` : def.slug;
+  const parent = def.parent ? bySlug.get(def.parent) : null;
+  if (def.parent && !parent) {
+    throw new Error(`Story parente introuvable pour ${fullSlug}: ${def.parent}`);
+  }
+  const existing = bySlug.get(fullSlug);
   let story;
   if (existing && !OVERWRITE) {
-    console.log(`Story ignorée (déjà existante): ${def.slug} — --overwrite pour réécrire`);
+    console.log(`Story ignorée (déjà existante): ${fullSlug} — --overwrite pour réécrire`);
     continue;
   }
   if (existing) {
@@ -1273,7 +1517,7 @@ for (const def of stories) {
       }),
     });
     story = response.story;
-    console.log(`Story MAJ: ${def.slug}`);
+    console.log(`Story MAJ: ${fullSlug}`);
   } else {
     const response = await api('/stories', {
       method: 'POST',
@@ -1281,14 +1525,15 @@ for (const def of stories) {
         story: {
           name: def.name,
           slug: def.slug,
-          parent_id: 0,
+          parent_id: parent?.id ?? 0,
           content: def.content,
         },
       }),
     });
     story = response.story;
-    console.log(`Story créée: ${def.slug}`);
+    console.log(`Story créée: ${fullSlug}`);
   }
+  bySlug.set(fullSlug, story);
   await sleep();
 
   if (PUBLISH) {

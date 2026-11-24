@@ -48,6 +48,17 @@ SITE_URL=https://www.pragma-formation.fr
 PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxx
 
+# Stripe checkout (server-only)
+STRIPE_SECRET_KEY=sk_live_xxx
+STRIPE_WEBHOOK_SECRET=whsec_xxx
+STRIPE_PRICE_AUTONOME_ONCE=price_xxx
+STRIPE_PRICE_AUTONOME_10X=price_xxx
+STRIPE_PRICE_MENTOREE_ONCE=price_xxx
+STRIPE_PRICE_MENTOREE_10X=price_xxx
+
+# Supabase service role / secret key (server-only, never exposed to the browser)
+SUPABASE_SERVICE_ROLE_KEY=sb_secret_xxx
+
 # Optional
 STORYBLOK_REGION=eu  # or 'us' for US region
 STORYBLOK_SPACE_ID=123456  # required to validate Visual Editor preview requests
@@ -78,6 +89,38 @@ URLs** allowlist.
 Supabase session cookies are HTTP-only and configured to persist for seven days.
 When a valid session cookie is present, visiting `/login` redirects directly to
 `/dashboard`.
+
+### Stripe checkout
+
+The purchase page (`/acheter`) posts to `/api/checkout`, which creates a Stripe
+Checkout Session. After payment, the webhook at `/api/stripe/webhook`:
+
+1. adds or updates the buyer in `public.pragma_inscriptions`;
+2. sends the Resend welcome email;
+3. records the payment in Stripe metadata and, for the 10x price, schedules the
+   end of the subscription after 10 monthly payments.
+
+Apply `supabase/migrations/005_stripe_checkout.sql` in the Supabase SQL editor
+before going live. Then configure the four price IDs and the service-role key in
+Vercel (see the environment block above).
+
+In the Stripe dashboard, create a webhook endpoint pointing to
+`https://www.pragma-formation.fr/api/stripe/webhook` and subscribe to:
+
+- `checkout.session.completed`
+- `checkout.session.async_payment_succeeded`
+- `invoice.paid`
+- `invoice.payment_failed`
+- `customer.subscription.updated`
+- `customer.subscription.deleted`
+
+Copy the endpoint signing secret into `STRIPE_WEBHOOK_SECRET`. For local testing,
+run `stripe listen --forward-to localhost:4321/api/stripe/webhook` and use the
+CLI signing secret.
+
+The welcome email is sent with `RESEND_FROM`. Use an address on a domain verified
+in Resend; the `onboarding@resend.dev` test sender only delivers to the Resend
+account owner.
 
 ### Development
 
