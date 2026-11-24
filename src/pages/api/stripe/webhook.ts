@@ -9,11 +9,8 @@ import {
   isPaymentMode,
   isPlanId,
   PLANS,
-  type PaymentMode,
-  type PlanId,
 } from '../../../lib/stripe';
-import { isEmailConfigured } from '../../../lib/email';
-import { sendWelcomeEmail } from '../../../lib/welcome-email';
+import { addContactToBrevoList, isBrevoConfigured } from '../../../lib/brevo';
 
 type SupabaseAdmin = ReturnType<typeof createSupabaseAdminClient>;
 
@@ -57,42 +54,35 @@ function json(data: unknown, status = 200): Response {
   });
 }
 
-async function deliverWelcomeEmail(args: {
+async function deliverBrevoContact(args: {
   supabase: SupabaseAdmin;
   rowId: number;
   email: string;
   firstName: string | null;
-  plan: PlanId;
-  payment: PaymentMode;
-  accessEndDate: Date;
+  lastName: string | null;
 }) {
-  const result = await sendWelcomeEmail({
-    to: args.email,
+  const result = await addContactToBrevoList({
+    email: args.email,
     firstName: args.firstName,
-    plan: args.plan,
-    payment: args.payment,
-    accessEndDate: args.accessEndDate,
+    lastName: args.lastName,
   });
 
-  if (!result.sent) {
-    console.error(`[stripe] Email de bienvenue non envoyé pour ${args.email}: ${result.reason}`);
-    // If Resend is configured, let Stripe retry the webhook instead of silently
-    // losing the welcome email.
-    if (isEmailConfigured()) {
-      throw new Error(`Email de bienvenue non envoyé: ${result.reason ?? 'inconnu'}`);
+  if (!result.synced) {
+    console.error(`[brevo] Contact non ajouté pour ${args.email}: ${result.reason}`);
+    // If Brevo is configured, let Stripe retry the webhook instead of silently
+    // missing the marketing list.
+    if (isBrevoConfigured()) {
+      throw new Error(`Contact Brevo non ajouté: ${result.reason ?? 'inconnu'}`);
     }
     return;
   }
 
   const { error } = await args.supabase
     .from('pragma_inscriptions')
-    .update({ welcome_email_sent_at: new Date().toISOString() })
+    .update({ brevo_synced_at: new Date().toISOString() })
     .eq('id', args.rowId);
   if (error) {
-    console.error(
-      '[stripe] Impossible de marquer le mail de bienvenue comme envoyé:',
-      error.message
-    );
+    console.error('[brevo] Impossible de marquer le contact comme synchronisé:', error.message);
   }
 }
 
@@ -120,27 +110,22 @@ async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
   const supabase = createSupabaseAdminClient();
 
   // Stripe can deliver the same event more than once. The session id is our
-  // idempotency key: if the row already exists, only retry a missing welcome
-  // email.
+  // idempotency key: if the row already exists, only retry a missing Brevo sync.
   const { data: existingBySession, error: sessionLookupError } = await supabase
     .from('pragma_inscriptions')
-    .select('id, email, first_name, access_end_date, welcome_email_sent_at')
+    .select('id, email, first_name, last_name, brevo_synced_at')
     .eq('stripe_checkout_session_id', session.id)
     .maybeSingle();
   if (sessionLookupError) throw new Error(sessionLookupError.message);
 
   if (existingBySession) {
-    if (!existingBySession.welcome_email_sent_at && existingBySession.email) {
-      await deliverWelcomeEmail({
+    if (!existingBySession.brevo_synced_at && existingBySession.email) {
+      await deliverBrevoContact({
         supabase,
         rowId: existingBySession.id,
         email: existingBySession.email,
         firstName: existingBySession.first_name ?? null,
-        plan,
-        payment,
-        accessEndDate: existingBySession.access_end_date
-          ? new Date(existingBySession.access_end_date)
-          : addMonths(new Date(), 18),
+        lastName: existingBySession.last_name ?? null,
       });
     }
     return;
@@ -204,7 +189,7 @@ async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
   }
 
   const paymentMethod = isMonthly ? 'recurrent' : 'payment';
-  const stripeFields = {
+  const checkoutFields = {
     stripe_customer_id: customerId,
     stripe_subscription_id: subscriptionId,
     stripe_checkout_session_id: session.id,
@@ -216,7 +201,7 @@ async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
     subscription_end_date: subscriptionEndDate,
     access_start_date: dateOnly(now),
     access_end_date: dateOnly(accessEnd),
-    welcome_email_sent_at: null,
+    brevo_synced_at: null,
   };
 
   // A customer may already exist in the table (lead, previous purchase, or an
@@ -253,7 +238,7 @@ async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
         upgrade: true,
         correction: Boolean(existingByEmail.correction) || planConfig.correction,
         remarks: [existingByEmail.remarks, `Achat Stripe ${session.id}`].filter(Boolean).join('\n'),
-        ...stripeFields,
+        ...checkoutFields,
         access_end_date: dateOnly(finalAccessEnd),
       })
       .eq('id', existingByEmail.id);
@@ -280,7 +265,7 @@ async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
         coaching: false,
         certification: false,
         remarks: `Achat Stripe ${session.id}`,
-        ...stripeFields,
+        ...checkoutFields,
       })
       .select('id')
       .single();
@@ -288,14 +273,12 @@ async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
     rowId = inserted.id;
   }
 
-  await deliverWelcomeEmail({
+  await deliverBrevoContact({
     supabase,
     rowId,
     email,
     firstName,
-    plan,
-    payment,
-    accessEndDate: finalAccessEnd,
+    lastName,
   });
 }
 

@@ -59,6 +59,10 @@ STRIPE_PRICE_MENTOREE_10X=price_xxx
 # Supabase service role / secret key (server-only, never exposed to the browser)
 SUPABASE_SERVICE_ROLE_KEY=sb_secret_xxx
 
+# Brevo marketing list (server-only)
+BREVO_API_KEY=xkeysib-xxx
+BREVO_LIST_ID=32
+
 # Optional
 STORYBLOK_REGION=eu  # or 'us' for US region
 STORYBLOK_SPACE_ID=123456  # required to validate Visual Editor preview requests
@@ -96,13 +100,14 @@ The purchase page (`/acheter`) posts to `/api/checkout`, which creates a Stripe
 Checkout Session. After payment, the webhook at `/api/stripe/webhook`:
 
 1. adds or updates the buyer in `public.pragma_inscriptions`;
-2. sends the Resend welcome email;
+2. adds the buyer to the Brevo list configured by `BREVO_LIST_ID` (32 by default);
 3. records the payment in Stripe metadata and, for the 10x price, schedules the
    end of the subscription after 10 monthly payments.
 
-Apply `supabase/migrations/005_stripe_checkout.sql` in the Supabase SQL editor
-before going live. Then configure the four price IDs and the service-role key in
-Vercel (see the environment block above).
+Apply `supabase/migrations/005_stripe_checkout.sql` and
+`supabase/migrations/006_brevo_sync.sql` in the Supabase SQL editor before going
+live. Then configure the four price IDs, the service-role key and the Brevo API
+key in Vercel (see the environment block above).
 
 In the Stripe dashboard, create a webhook endpoint pointing to
 `https://www.pragma-formation.fr/api/stripe/webhook` and subscribe to:
@@ -118,9 +123,13 @@ Copy the endpoint signing secret into `STRIPE_WEBHOOK_SECRET`. For local testing
 run `stripe listen --forward-to localhost:4321/api/stripe/webhook` and use the
 CLI signing secret.
 
-The welcome email is sent with `RESEND_FROM`. Use an address on a domain verified
-in Resend; the `onboarding@resend.dev` test sender only delivers to the Resend
-account owner.
+The Brevo API key is sent in the `api-key` header and the contact is added with
+`updateEnabled: true`, so an existing contact is updated instead of duplicated.
+`BREVO_LIST_ID` is optional and defaults to `32`.
+
+Resend is still used for the contact form and the livrable notifications. Use an
+address on a domain verified in Resend for `RESEND_FROM`; the
+`onboarding@resend.dev` test sender only delivers to the Resend account owner.
 
 ### Development
 
