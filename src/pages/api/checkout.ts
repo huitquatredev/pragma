@@ -44,7 +44,6 @@ export const POST: APIRoute = async (context) => {
       billing_address_collection: 'auto',
       phone_number_collection: { enabled: true },
       allow_promotion_codes: true,
-      submit_type: 'pay',
       // Keep the literal placeholder: Stripe replaces it with the session ID.
       success_url: `${successUrl.origin}${successUrl.pathname}?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: cancelUrl.href,
