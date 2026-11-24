@@ -3,8 +3,8 @@ import AppLayout from '../../layouts/AppLayout.astro';
 import CarouselArrow from '../../components/app/CarouselArrow.astro';
 import LockIcon from '../../components/app/LockIcon.astro';
 import ProgressIndex from '../../components/app/ProgressIndex.astro';
-import { fetchFormationIndex } from '../../lib/storyblok';
-import { stripLevelPrefix, oneBased } from '../../lib/titres';
+import { fetchFormationIndex, fetchStory } from '../../lib/storyblok';
+import { stripLevelPrefix, levelNumber } from '../../lib/titres';
 import { previewInscription } from '../../lib/supabase';
 import {
   countAccessible,
@@ -21,6 +21,12 @@ const displayName =
     ? [inscription.first_name, inscription.last_name].filter(Boolean).join(' ')
     : (Astro.locals.user?.email ?? '');
 const parts = await fetchFormationIndex();
+// Partie 0 (Bienvenue) lives outside the numbered 9-part index.
+const introPart = await fetchStory('parties/introduction-a-pragma').catch(() => null);
+const formationParts =
+  introPart?.content && !parts.some((part) => part.uuid === introPart.uuid)
+    ? [introPart, ...parts]
+    : parts;
 
 let validatedIds = new Set<string>();
 if (!isPreview && Astro.locals.supabase) {
@@ -35,18 +41,20 @@ if (!isPreview && Astro.locals.supabase) {
   }
 }
 
-const nextCourse = inscription ? getFirstIncompleteCourse(parts, validatedIds, inscription) : null;
+const nextCourse = inscription
+  ? getFirstIncompleteCourse(formationParts, validatedIds, inscription)
+  : null;
 const nextCourseTitle = nextCourse ? stripLevelPrefix(nextCourse.content.title) : '';
 // Partie courante : la première avec au moins un cours accessible non validé
 // (les parties entièrement verrouillées sont sautées, mais restent visitables).
 let currentPart = 0;
-if (inscription && parts.length > 0) {
-  const found = parts.findIndex((part) =>
+if (inscription && formationParts.length > 0) {
+  const found = formationParts.findIndex((part) =>
     flattenCourses([part], inscription).some((c) => !validatedIds.has(c.uuid))
   );
-  currentPart = found >= 0 ? found : parts.length - 1;
+  currentPart = found >= 0 ? found : formationParts.length - 1;
 }
-const accessibleCourses = inscription ? flattenCourses(parts, inscription) : [];
+const accessibleCourses = inscription ? flattenCourses(formationParts, inscription) : [];
 const validatedCount = accessibleCourses.filter((c) => validatedIds.has(c.uuid)).length;
 const overall =
   accessibleCourses.length > 0 ? Math.round((validatedCount / accessibleCourses.length) * 100) : 0;
@@ -151,7 +159,7 @@ if (parts.length > 0) {
       {
         inscription && (
           <ProgressIndex
-            parts={parts}
+            parts={formationParts}
             validatedIds={validatedIds}
             inscription={inscription}
             current={currentPart}
@@ -182,7 +190,7 @@ if (parts.length > 0) {
                       data-dot={partIndex}
                       role="tab"
                       aria-selected={partIndex === currentLivrable ? 'true' : 'false'}
-                      aria-label={`Livrable ${oneBased(partIndex)} : ${stripLevelPrefix(part.content.title)}`}
+                      aria-label={`Livrable ${levelNumber(part.content.title, partIndex)} : ${stripLevelPrefix(part.content.title)}`}
                     />
                   ))}
                 </div>
@@ -215,7 +223,9 @@ if (parts.length > 0) {
                     {locked ? (
                       <span class="locked-row">
                         <span>
-                          <span class="progress-index-level">Partie {oneBased(partIndex)}</span>
+                          <span class="progress-index-level">
+                            Partie {levelNumber(part.content.title, partIndex)}
+                          </span>
                           <LockIcon />
                           {stripLevelPrefix(part.content.title)}
                         </span>
@@ -224,7 +234,9 @@ if (parts.length > 0) {
                     ) : (
                       <a href={`/dashboard/livrables/${part.slug}`}>
                         <span>
-                          <span class="progress-index-level">Partie {oneBased(partIndex)}</span>
+                          <span class="progress-index-level">
+                            Partie {levelNumber(part.content.title, partIndex)}
+                          </span>
                           {stripLevelPrefix(part.content.title)}
                           <span class="livrables-meta">
                             {status ? `${status.percentage}% du parcours` : ''}

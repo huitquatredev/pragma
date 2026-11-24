@@ -17,7 +17,7 @@ import {
   type CoursBlok,
   type SectionText,
 } from '../../lib/storyblok';
-import { stripLevelPrefix, oneBased } from '../../lib/titres';
+import { stripLevelPrefix, levelNumber } from '../../lib/titres';
 import { previewInscription } from '../../lib/supabase';
 import {
   countAccessible,
@@ -51,7 +51,7 @@ if (!isPreview && Astro.locals.supabase) {
 
 const parties = await fetchFormationIndex();
 const partIndex = parties.findIndex((p) => p.uuid === story.uuid);
-const partNumber = oneBased(partIndex);
+const partNumber = levelNumber(story.content.title, partIndex);
 const displayTitle = stripLevelPrefix(story.content.title);
 
 const enjeu = cleanRichText(story.content.enjeu);

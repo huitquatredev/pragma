@@ -7,6 +7,7 @@
  */
 
 const LEVEL_PREFIX = /^(partie|module)\s+\d+\s*[:\-–—]?\s*/i;
+const LEVEL_NUMBER = /^(?:partie|module)\s+(\d+)/i;
 
 /** "Module 3 : Prépare…" -> "Prépare…" ; "Décrypte…" inchangé. */
 export function stripLevelPrefix(title: string | undefined | null): string {
@@ -17,4 +18,16 @@ export function stripLevelPrefix(title: string | undefined | null): string {
 /** Index 0-based -> numéro 1-based, -1 (introuvable) -> null. */
 export function oneBased(index: number): number | null {
   return index >= 0 ? index + 1 : null;
+}
+
+/**
+ * Numéro affiché : celui déclaré dans le titre (« Partie 0 : … » -> 0,
+ * « Module 3 : … » -> 3), sinon le numéro d'ordre 1-based.
+ */
+export function levelNumber(title: string | undefined | null, index: number): number | null {
+  if (typeof title === 'string') {
+    const match = title.match(LEVEL_NUMBER);
+    if (match) return Number(match[1]);
+  }
+  return oneBased(index);
 }

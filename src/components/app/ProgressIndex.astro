@@ -1,7 +1,7 @@
 ---
 import type { StoryblokStory } from '../../lib/storyblok';
 import type { Inscription } from '../../lib/supabase';
-import { stripLevelPrefix, oneBased } from '../../lib/titres';
+import { stripLevelPrefix, levelNumber } from '../../lib/titres';
 import CarouselArrow from './CarouselArrow.astro';
 import {
   countAccessible,
@@ -40,12 +40,12 @@ const active = parts.length > 0 ? Math.min(Math.max(current, 0), parts.length - 
                 data-dot={partIndex}
                 role="tab"
                 aria-selected={partIndex === active ? 'true' : 'false'}
-                aria-label={`Partie ${oneBased(partIndex)} : ${stripLevelPrefix(part.content.title)}`}
+                aria-label={`Partie ${levelNumber(part.content.title, partIndex)} : ${stripLevelPrefix(part.content.title)}`}
               />
             ))}
           </div>
           <p class="carousel-counter" data-counter data-counter-label="Partie" aria-live="polite">
-            Partie {(active ?? 0) + 1} / {parts.length}
+            Partie {levelNumber(parts[active]?.content.title, active)} / {parts.length}
           </p>
           <button type="button" class="carousel-btn" data-next aria-label="Partie suivante">
             <CarouselArrow direction="right" />
@@ -58,7 +58,7 @@ const active = parts.length > 0 ? Math.min(Math.max(current, 0), parts.length - 
     {
       parts.map((part, partIndex) => {
         const partStatus = getPartStatus(part, validatedIds, inscription);
-        const partNumber = oneBased(partIndex);
+        const partNumber = levelNumber(part.content.title, partIndex);
         const partCours = [
           ...(part.content.modules ?? []).flatMap((m) =>
             m && typeof m === 'object' && m.content ? (m.content.cours ?? []) : []
@@ -68,7 +68,11 @@ const active = parts.length > 0 ? Math.min(Math.max(current, 0), parts.length - 
         const partAccess = countAccessible(partCours, inscription);
         const partLocked = partAccess.total > 0 && partAccess.accessible === 0;
         return (
-          <div class="partie-slide" data-slide hidden={partIndex !== active}>
+          <div
+            class="partie-slide"
+            data-slide
+            data-number={partNumber ?? ''}
+            hidden={partIndex !== active}>
             {partLocked ? (
               <span class="progress-index-part">
                 <span>
@@ -190,7 +194,8 @@ const active = parts.length > 0 ? Math.min(Math.max(current, 0), parts.length - 
         else s.setAttribute('hidden', '');
       });
       dots.forEach((d, k) => d.setAttribute('aria-selected', k === index ? 'true' : 'false'));
-      if (counter) counter.textContent = `${counterLabel} ${index + 1} / ${slides.length}`;
+      const number = slides[index]?.getAttribute('data-number') || String(index + 1);
+      if (counter) counter.textContent = `${counterLabel} ${number} / ${slides.length}`;
     };
     prev?.addEventListener('click', () => show(index - 1));
     next?.addEventListener('click', () => show(index + 1));

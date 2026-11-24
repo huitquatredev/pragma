@@ -33,7 +33,7 @@ import {
   hasForm,
   mergePartieAnswers,
 } from '../../lib/livrables';
-import { stripLevelPrefix, oneBased } from '../../lib/titres';
+import { stripLevelPrefix, levelNumber } from '../../lib/titres';
 
 const isPreview = process.env.IS_PREVIEW === 'true' || import.meta.env.IS_PREVIEW === 'true';
 const story = await fetchStory(`cours/${Astro.params.slug!}`).catch(() => null);
@@ -84,7 +84,10 @@ const moduleIndex =
 
 const { fetchFormationIndex } = await import('../../lib/storyblok');
 const allParts = await fetchFormationIndex();
-const partNumber = oneBased(allParts.findIndex((p) => p.uuid === parentPart?.uuid));
+const partNumber = levelNumber(
+  parentPart?.content.title,
+  allParts.findIndex((p) => p.uuid === parentPart?.uuid)
+);
 
 type CourseNavTarget = { href: string; label: string };
 let nextTarget: CourseNavTarget | null = null;

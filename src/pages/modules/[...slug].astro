@@ -12,7 +12,7 @@ import {
   type CoursBlok,
   type SectionText,
 } from '../../lib/storyblok';
-import { stripLevelPrefix, oneBased } from '../../lib/titres';
+import { stripLevelPrefix, levelNumber } from '../../lib/titres';
 import { previewInscription } from '../../lib/supabase';
 import { getProgressIndex, hasCourseAccess } from '../../lib/progress';
 
@@ -46,7 +46,10 @@ const moduleIndex = parentPart
 
 const { fetchFormationIndex } = await import('../../lib/storyblok');
 const allParts = await fetchFormationIndex();
-const partNumber = oneBased(allParts.findIndex((p) => p.uuid === parentPart?.uuid));
+const partNumber = levelNumber(
+  parentPart?.content.title,
+  allParts.findIndex((p) => p.uuid === parentPart?.uuid)
+);
 const displayTitle = stripLevelPrefix(story.content.title);
 const parentTitle = parentPart ? stripLevelPrefix(parentPart.content.title) : '';
 
